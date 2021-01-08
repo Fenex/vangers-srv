@@ -1,0 +1,50 @@
+use crate::client::ClientID;
+use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
+
+#[derive(Default)]
+struct Pos {
+    x: i32,
+    y: i32,
+}
+
+struct Auth {
+    id: ClientID,
+    login: Vec<u8>,
+    login_utf8: String,
+    password: Option<u64>,
+}
+
+pub struct Player {
+    auth: Auth,
+    pos: Pos,
+    world: i32,
+}
+
+impl Player {
+    pub fn new(id: ClientID, login: &[u8], pwd: &[u8]) -> Self {
+        let login_utf8 = crate::util::convert_cp866_to_utf8(login).unwrap();
+        let password = if pwd.len() > 0 {
+            Some(Self::get_hash_pwd(pwd))
+        } else {
+            None
+        };
+
+        Self {
+            pos: Pos::default(),
+            world: 0,
+            auth: Auth {
+                id,
+                login: login.to_owned(),
+                login_utf8,
+                password,
+            },
+        }
+    }
+
+    fn get_hash_pwd(pwd: &[u8]) -> u64 {
+        let mut hasher = DefaultHasher::new();
+        pwd.hash(&mut hasher);
+        hasher.finish()
+    }
+}

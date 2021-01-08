@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+    "vangers-srv",
+    "vangers-srv-shell"
+]
