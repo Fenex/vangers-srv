@@ -11,14 +11,6 @@ use super::protocol::*;
 const HS_IN: &'static [u8] = b"Vivat Sicher, Rock'n'Roll forever!!!";
 const HS_OUT: &'static [u8] = b"Enter, my son, please...";
 
-// TODO: unstable feature `fill` for now, needs to replace later
-// buff.fill(0);
-fn clear_buff(buff: &mut [u8]) {
-    for byte in buff.iter_mut() {
-        *byte = 0;
-    }
-}
-
 pub type ClientID = usize;
 
 pub struct MpscData(pub ClientID, pub Connection);
@@ -244,40 +236,5 @@ async fn auth(stream: &mut TcpStream) -> Result<(), Box<dyn std::error::Error>> 
         return Err("ERROR handshake: send answer fault".into());
     }
 
-    // === zMod fixed instructions below === //
-    clear_buff(&mut buff);
-    match stream.read(&mut buff).await {
-        Ok(n) if n < 3 => return Err("ERROR zModAuth: read incoming data".into()),
-        Ok(_) => {
-            let expected: [u8; 3] = [0x01, 0x00, 137];
-            if !expected.eq(&buff[0..3]) {
-                return Err("ERROR zModAuth: step1 unexpected incoming data".into());
-            }
-        }
-        Err(_) => return Err("ERROR zModAuth: (IO error)".into()),
-    };
-
-    let zevent_size = 0x05_i16.to_le_bytes();
-    let zevent_id = 198_u8.to_le_bytes();
-    let zresponse = 0_i32.to_le_bytes();
-
-    let send = std::iter::empty()
-        .chain(&zevent_size)
-        .chain(&zevent_id)
-        .chain(&zresponse)
-        .map(|&b| b)
-        .collect::<Vec<_>>();
-
-    dbg!(("send auth", &send));
-
-    if let Err(_) = stream.write(&send).await {
-        return Err("ERROR zModAuth: send answer fault".into());
-    }
-
     Ok(())
-    // unreachable!()
-    // Ok(n) => {
-    //     return Ok(Self{id:1});
-    // },
-    // Err(e) => return Err(e)
 }
