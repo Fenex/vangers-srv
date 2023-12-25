@@ -52,9 +52,6 @@ impl OnUpdate_CloseSocket for Server {
     ) -> Result<OnUpdateOk, OnUpdateError> {
         self.leave_world(packet, client_id).ok();
 
-        // TODO: needs to free a player slot
-        // self.free_player_slot();
-
         let game = match self.get_mut_game_by_clientid(client_id) {
             Some(game) => game,
             None => return Err(CloseSocketError::PlayerNotFound(client_id).into()),
@@ -81,8 +78,14 @@ impl OnUpdate_CloseSocket for Server {
         let game = self.get_mut_game_by_clientid(client_id).unwrap();
 
         game.players.retain(|p| p.client_id != client_id);
+
         // TODO: recalc game ratings
         // self.process_ratings(game.gmtype);
+
+        if game.players.is_empty() {
+            let game_id = game.id;
+            self.games.remove(&game_id);
+        }
 
         Ok(OnUpdateOk::Complete)
     }
