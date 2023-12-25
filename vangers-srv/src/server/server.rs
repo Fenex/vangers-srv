@@ -211,11 +211,14 @@ impl Server {
                         // self.clients
                         //     .retain(|c| c.connection != Connection::Disconnected);
                     }
-                    MpscData(id, connection @ Connection::Authenticated)
+                    MpscData(id, connection @ Connection::Authenticated(_))
                     | MpscData(id, connection @ Connection::Connected) => {
                         let client = self.clients.iter_mut().find(|c| c.id == id);
                         if let Some(client) = client {
                             client.connection = connection;
+                            if let Connection::Authenticated(protocol) = client.connection {
+                                client.protocol = protocol;
+                            }
                         }
                     }
                     MpscData(id, Connection::Updated(p)) => {

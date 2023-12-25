@@ -1,6 +1,6 @@
 use std::convert::TryFrom;
 
-use tokio::io::{AsyncWriteExt, AsyncReadExt};
+use ::tokio::io::{AsyncWriteExt, AsyncReadExt};
 use ::tokio::net::TcpStream;
 use ::tokio::sync::mpsc::{self, Receiver};
 
@@ -17,7 +17,8 @@ pub struct MpscData(pub ClientID, pub Connection);
 
 pub enum Connection {
     Connected,
-    Authenticated,
+    // authenticated with protocol version
+    Authenticated(u8),
     Disconnected,
     Updated(Packet),
 }
@@ -29,7 +30,7 @@ impl PartialEq for Connection {
         use Connection::Disconnected as D;
 
         match (self, other) {
-            (A, A) | (C, C) | (D, D) => true,
+            (A(_), A(_)) | (C, C) | (D, D) => true,
             _ => false,
         }
     }
@@ -39,6 +40,7 @@ pub struct Client {
     /// Uniq ClientID
     pub id: ClientID,
     pub connection: Connection,
+    pub protocol: u8,
     tx_server: mpsc::Sender<MpscData>,
     tx_client: mpsc::Sender<Vec<u8>>,
 }
@@ -60,23 +62,27 @@ impl Client {
         let id = self.id;
 
         ::tokio::spawn(async move {
-            if auth(&mut stream).await.is_err() {
-                stream.write(b"Auth failed, bye-bye\0").await.unwrap();
-                stream.shutdown().await.unwrap();
-                if tx_server
-                    .send(MpscData(id, Connection::Disconnected))
-                    .await
-                    .is_err()
-                {
-                    println!(
-                        "Error: Can't send `Connection::Disconnected` event to server receiver"
-                    );
+            let protocol = match auth(&mut stream).await {
+                Ok(protocol_version) => protocol_version,
+                Err(err) => {
+                    eprintln!("auth failed: {}", err);
+                    stream.write(b"Auth failed, bye-bye\0").await.unwrap();
+                    stream.shutdown().await.unwrap();
+                    if tx_server
+                        .send(MpscData(id, Connection::Disconnected))
+                        .await
+                        .is_err()
+                    {
+                        println!(
+                            "Error: Can't send `Connection::Disconnected` event to server receiver"
+                        );
+                    }
+                    return;
                 }
-                return;
-            }
+            };
 
             if tx_server
-                .send(MpscData(id, Connection::Authenticated))
+                .send(MpscData(id, Connection::Authenticated(protocol)))
                 .await
                 .is_err()
             {
@@ -189,6 +195,7 @@ impl Client {
         let (tx_client, rx_server) = mpsc::channel::<Vec<u8>>(1000);
 
         let client = Self {
+            protocol: 0,
             id,
             connection: Connection::Connected,
             tx_server: tx,
@@ -200,41 +207,56 @@ impl Client {
     }
 }
 
-async fn auth(stream: &mut TcpStream) -> Result<(), Box<dyn std::error::Error>> {
+#[derive(thiserror::Error, Debug)]
+enum AuthError {
+    #[error("Connection closed by client")]
+    ClosedByClient,
+    #[error("Handshake: unexpected request header")]
+    HsUnexpectedRequestHeader,
+    #[error("Handshake: unexpected protocol version, expected one of: {0:?}, given: {1}")]
+    HsUnexpectedProtocolVersion(&'static [u8], u8),
+    #[error("Handshake response fault")]
+    HsResponse,
+    #[error("Handshake: unexpected request header (zero-terminate symbol is missed)")]
+    HsZeroTerminated,
+    #[error("Connection fault")]
+    Connection,
+}
+
+async fn auth(stream: &mut TcpStream) -> Result<u8, AuthError> {
+    use AuthError::*;
+
     let mut buff = [0u8; 256];
 
     match stream.read(&mut buff).await {
-        Ok(_n @ 0) => return Err("Connection closed by client".into()),
+        Ok(_n @ 0) => return Err(ClosedByClient),
         Ok(_n) => {
             if let Some(pos) = buff.iter().position(|&b| b == 0) {
                 if !HS_IN.eq(&buff[0..pos]) {
-                    return Err("ERROR handshake: unexpected request header".into());
+                    return Err(HsUnexpectedRequestHeader);
                 }
 
                 let protocol_version = buff[pos + 1];
-                if protocol_version != 1 {
-                    return Err(format!(
-                        "ERROR handshake: unknown protocol version;
-                    expected: {}, given: {}",
-                        1, protocol_version
-                    )
-                    .as_str()
-                    .into());
+
+                if !matches!(protocol_version, 1 | 2) {
+                    return Err(HsUnexpectedProtocolVersion(&[1, 2], protocol_version))
                 }
+
+                let send = HS_OUT
+                    .into_iter()
+                    .chain(&[0u8, protocol_version])
+                    .map(|&u| u)
+                    .collect::<Vec<_>>();
+
+                if let Err(_) = stream.write(&send).await {
+                    return Err(HsResponse);
+                }
+
+                return Ok(protocol_version);
+            } else {
+                return Err(HsZeroTerminated)
             }
         }
-        _ => return Err("ERROR handshake: connection fault".into()),
+        _ => return Err(Connection),
     }
-
-    let send = HS_OUT
-        .into_iter()
-        .chain(&[0u8, 1u8])
-        .map(|&u| u)
-        .collect::<Vec<_>>();
-
-    if let Err(_) = stream.write(&send).await {
-        return Err("ERROR handshake: send answer fault".into());
-    }
-
-    Ok(())
 }

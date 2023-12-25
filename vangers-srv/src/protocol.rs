@@ -62,6 +62,7 @@ pub enum Action {
     PLAYERS_STATUS = 0xD2,
     PLAYERS_DATA = 0xD3,
     PLAYERS_RATING = 0xD4,
+    Z_TIME_RESPONSE = 0xE3
 }
 
 impl Action {
