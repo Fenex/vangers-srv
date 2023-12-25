@@ -1,7 +1,7 @@
 use std::convert::TryFrom;
 
+use tokio::io::{AsyncWriteExt, AsyncReadExt};
 use ::tokio::net::TcpStream;
-use ::tokio::prelude::*;
 use ::tokio::sync::mpsc::{self, Receiver};
 
 use crate::num_traits::FromPrimitive;
@@ -62,7 +62,7 @@ impl Client {
         ::tokio::spawn(async move {
             if auth(&mut stream).await.is_err() {
                 stream.write(b"Auth failed, bye-bye\0").await.unwrap();
-                stream.shutdown(std::net::Shutdown::Both).unwrap();
+                stream.shutdown().await.unwrap();
                 if tx_server
                     .send(MpscData(id, Connection::Disconnected))
                     .await

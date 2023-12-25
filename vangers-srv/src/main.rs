@@ -1,6 +1,6 @@
 extern crate num_traits;
 
-use ::clap::{crate_authors, crate_version, Clap};
+use ::clap::Parser;
 
 mod client;
 mod game;
@@ -14,25 +14,25 @@ mod vanject;
 use crate::server::Server;
 // use crate::shell::*;
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 #[clap(
     name = "Vangers Server",
-    version = crate_version!(),
-    author = crate_authors!()
+    version,
+    author
 )]
 struct Opts {
     #[clap(
         short,
         long,
         default_value = "2197",
-        about = "Server port to listening incoming in-game player connections"
+        help = "Server port to listening incoming in-game player connections"
     )]
     port: u16,
 
-    // #[clap(short, long, about = "Accept incoming connections from localhost only")]
+    // #[clap(short, long, help = "Accept incoming connections from localhost only")]
     // localhost: bool,
 
-    // #[clap(short, long, about = "Enable interactive shell")]
+    // #[clap(short, long, help = "Enable interactive shell")]
     // shell: bool,
 }
 

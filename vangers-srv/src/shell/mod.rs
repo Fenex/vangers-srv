@@ -1,6 +1,6 @@
-use clap::Clap;
+use clap::Parser;
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 pub enum ShellCmd {
     // #[clap(subcommand)]
     Server(Server),
@@ -10,14 +10,14 @@ pub enum ShellCmd {
     Exit,
 }
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 enum SubServer {
     Status,
     Shutdown,
     Uptime,
 }
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 pub struct Server {
     #[clap(subcommand)]
     subcmd: SubServer,
@@ -25,7 +25,7 @@ pub struct Server {
     test: bool,
 }
 
-// #[derive(Clap, Debug)]
+// #[derive(Parser, Debug)]
 // pub enum SubShellCmd {
 //     Server,
 //     Game,
