@@ -160,6 +160,7 @@ fn view(prefix: &str, p: &Packet) {
     match &p.action {
         Action::CREATE_OBJECT | Action::UPDATE_OBJECT | Action::DELETE_OBJECT => (),
         Action::SERVER_TIME | Action::SERVER_TIME_QUERY | Action::SERVER_TIME_RESPONSE => (),
+        Action::GAMES_LIST_QUERY => (),
         a => println!("{} {:?}", prefix, a),
     }
 }
