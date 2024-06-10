@@ -1,5 +1,3 @@
-use std::fmt;
-
 use crate::client::ClientID;
 use crate::protocol::{Action, NetTransportSend, Packet};
 use crate::vanject::*;
@@ -7,21 +5,14 @@ use crate::Server;
 
 use super::{OnUpdateError, OnUpdateOk};
 
-#[derive(Debug)]
+#[derive(Debug, ::thiserror::Error)]
 pub enum CreateObjectError {
+    #[error("fail read slice as vanject: [{0}]")]
     SliceToVanjectParse(VanjectError),
+    #[error("player with `client_id`={0} not found")]
     PlayerNotFound(ClientID),
+    #[error("player with `client_id`={0} not bind")]
     PlayerNotBind(ClientID),
-}
-
-impl fmt::Display for CreateObjectError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::SliceToVanjectParse(e) => write!(f, "fail read slice as vanject: [{}]", e),
-            Self::PlayerNotFound(id) => write!(f, "player with `client_id`={} not found", id),
-            Self::PlayerNotBind(id) => write!(f, "player with `client_id`={} not bind", id),
-        }
-    }
 }
 
 impl From<CreateObjectError> for OnUpdateError {

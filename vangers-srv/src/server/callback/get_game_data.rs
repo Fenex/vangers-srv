@@ -1,24 +1,15 @@
-use std::fmt;
-
 use crate::client::ClientID;
 use crate::protocol::{NetTransportSend, Packet};
 use crate::Server;
 
 use super::{OnUpdateError, OnUpdateOk};
 
-#[derive(Debug)]
+#[derive(Debug, ::thiserror::Error)]
 pub enum GetGameDataError {
+    #[error("player with client_id `{0}` not found")]
     PlayerNotFound(ClientID),
+    #[error("game with id `{0}` is not configured")]
     NotConfigured(u32),
-}
-
-impl fmt::Display for GetGameDataError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::PlayerNotFound(p) => write!(f, "player with client_id `{}` not found", p),
-            Self::NotConfigured(g) => write!(f, "game with id `{}` is not configured", g),
-        }
-    }
 }
 
 impl From<GetGameDataError> for OnUpdateError {

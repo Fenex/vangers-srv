@@ -1,5 +1,3 @@
-use std::fmt;
-
 use crate::client::ClientID;
 use crate::player::Player;
 use crate::protocol::*;
@@ -8,21 +6,14 @@ use crate::Server;
 
 use super::{OnUpdateError, OnUpdateOk};
 
-#[derive(Debug)]
+#[derive(Debug, ::thiserror::Error)]
 pub enum AttachToGameError {
+    #[error("game with id `{0}` not found")]
     NotExists(u32),
+    #[error("required byte `game_id` not found")]
     IdEmpty,
+    #[error("game have no free player slots")]
     Full(u32),
-}
-
-impl fmt::Display for AttachToGameError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::NotExists(gmid) => write!(f, "game with id `{}` not found", gmid),
-            Self::IdEmpty => write!(f, "required byte `game_id` not found"),
-            Self::Full(_) => write!(f, "game have no free player slots"),
-        }
-    }
 }
 
 impl From<AttachToGameError> for OnUpdateError {

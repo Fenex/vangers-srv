@@ -1,5 +1,3 @@
-use std::fmt;
-
 use crate::client::ClientID;
 use crate::game::Type as GameType;
 use crate::protocol::Packet;
@@ -7,23 +5,14 @@ use crate::Server;
 
 use super::{OnUpdateError, OnUpdateOk};
 
-#[derive(Debug)]
+#[derive(Debug, ::thiserror::Error)]
 pub enum SetPlayerDataError {
+    #[error("player with client_id `{0}` not found")]
     PlayerNotFound(ClientID),
+    #[error("player with client_id `{0}` not bind")]
     PlayerNotBind(ClientID),
+    #[error("fail read slice as body (gmtype is `{0:?}`)")]
     SliceToBodyParse(GameType),
-}
-
-impl fmt::Display for SetPlayerDataError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::PlayerNotFound(id) => write!(f, "player with client_id `{}` not found", id),
-            Self::PlayerNotBind(id) => write!(f, "player with client_id `{}` not bind", id),
-            Self::SliceToBodyParse(gmtype) => {
-                write!(f, "fail read slice as body (gmtype is `{:?}`)", gmtype)
-            }
-        }
-    }
 }
 
 impl From<SetPlayerDataError> for OnUpdateError {

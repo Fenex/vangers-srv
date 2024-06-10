@@ -1,5 +1,3 @@
-use std::fmt;
-
 use crate::client::ClientID;
 use crate::protocol::{Action, Packet};
 use crate::utils::slice_le_to_i32;
@@ -7,21 +5,14 @@ use crate::Server;
 
 use super::{OnUpdateError, OnUpdateOk};
 
-#[derive(Debug)]
+#[derive(Debug, ::thiserror::Error)]
 pub enum DeleteObjectError {
-    SliceToVanjectParse,
+    // #[error("fail read slice as vanject")]
+    // SliceToVanjectParse,
+    #[error("player with `client_id`={0} not found")]
     PlayerNotFound(ClientID),
+    #[error("player with `client_id`={0} not bind")]
     PlayerNotBind(ClientID),
-}
-
-impl fmt::Display for DeleteObjectError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::SliceToVanjectParse => write!(f, "fail read slice as vanject"),
-            Self::PlayerNotFound(id) => write!(f, "player with `client_id`={} not found", id),
-            Self::PlayerNotBind(id) => write!(f, "player with `client_id`={} not bind", id),
-        }
-    }
 }
 
 impl From<DeleteObjectError> for OnUpdateError {

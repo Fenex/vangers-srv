@@ -1,4 +1,3 @@
-use std::fmt;
 use std::{cell::BorrowError, collections::HashMap};
 
 use crate::client::ClientID;
@@ -7,27 +6,16 @@ use crate::Server;
 
 use super::{OnUpdateError, OnUpdateOk};
 
-#[derive(Debug)]
+#[derive(Debug, ::thiserror::Error)]
 pub enum LeaveWorldError {
+    #[error("player with client_id `{0}` not found")]
     PlayerNotFound(ClientID),
+    #[error("player with client_id `{0}` not bind")]
     PlayerNotBind(ClientID),
+    #[error("player with client_id `{0}` is out of all worlds")]
     WorldEmpty(ClientID),
+    #[error("cannot get player's world (client_id `{0}`): {1}")]
     BorrowWorld(ClientID, BorrowError),
-}
-
-impl fmt::Display for LeaveWorldError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::PlayerNotFound(id) => write!(f, "player with client_id `{}` not found", id),
-            Self::PlayerNotBind(id) => write!(f, "player with client_id `{}` not bind", id),
-            Self::WorldEmpty(id) => {
-                write!(f, "player with client_id `{}` is out of all worlds", id)
-            }
-            Self::BorrowWorld(id, err) => {
-                write!(f, "cannot get player's world (client_id `{}`): {}", id, err)
-            }
-        }
-    }
 }
 
 impl From<LeaveWorldError> for OnUpdateError {
