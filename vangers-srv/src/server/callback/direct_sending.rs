@@ -15,12 +15,6 @@ pub enum DirectSendingError {
     TxPlayerNotFound(ClientID),
 }
 
-impl From<DirectSendingError> for OnUpdateError {
-    fn from(from: DirectSendingError) -> Self {
-        Self::DirectSendingError(from)
-    }
-}
-
 #[allow(non_camel_case_types)]
 pub(super) trait OnUpdate_DirectSending {
     fn direct_sending(

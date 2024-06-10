@@ -30,63 +30,52 @@ use set_world::*;
 use total_players_data_query::*;
 use update_object::*;
 
-use std::fmt;
-
 use crate::client::ClientID;
 use crate::protocol::{Action, Packet};
 use crate::Server;
 
-#[derive(Debug)]
+#[derive(Debug, ::thiserror::Error)]
 pub enum OnUpdateError {
-    #[allow(dead_code)]
-    DebugError((Action, Vec<u8>)),
+    // #[error("Handled Debug for: {:?}, Packet: {:?}")]
+    // DebugError((Action, Vec<u8>)),
+    #[error("{}", not_implemented_errdisplay(.0))]
     NotImplementedAction(Packet),
+    #[error("response type for action {0:?} is not exists")]
     ResponsePacketTypeNotExist(Action),
-    AttachToGameError(AttachToGameError),
-    // ServerTimeQueryError(ServerTimeQueryError),
-    RegisterNameError(RegisterNameError),
-    SetPlayerDataError(SetPlayerDataError),
-    SetGameDataError(SetGameDataError),
-    GetGameDataError(GetGameDataError),
-    CreateObjectError(CreateObjectError),
-    UpdateObjectError(UpdateObjectError),
-    DeleteObjectError(DeleteObjectError),
-    DirectSendingError(DirectSendingError),
-    TotalPlayersDataQueryError(TotalPlayersDataQueryError),
-    SetWorldError(SetWorldError),
-    LeaveWorldError(LeaveWorldError),
-    CloseSocketError(CloseSocketError),
+    #[error("AttachToGameError: {0}")]
+    AttachToGameError(#[from] AttachToGameError),
+    #[error("RegisterNameError: {0}")]
+    RegisterNameError(#[from] RegisterNameError),
+    #[error("SetPlayerDataError: {0}")]
+    SetPlayerDataError(#[from] SetPlayerDataError),
+    #[error("SetGameDataError: {0}")]
+    SetGameDataError(#[from] SetGameDataError),
+    #[error("GetGameDataError: {0}")]
+    GetGameDataError(#[from] GetGameDataError),
+    #[error("CreateObjectError: {0}")]
+    CreateObjectError(#[from] CreateObjectError),
+    #[error("UpdateObjectError: {0}")]
+    UpdateObjectError(#[from] UpdateObjectError),
+    #[error("DeleteObjectError: {0}")]
+    DeleteObjectError(#[from] DeleteObjectError),
+    #[error("DirectSendingError: {0}")]
+    DirectSendingError(#[from] DirectSendingError),
+    #[error("TotalPlayersDataQueryError: {0}")]
+    TotalPlayersDataQueryError(#[from] TotalPlayersDataQueryError),
+    #[error("SetWorldError: {0}")]
+    SetWorldError(#[from] SetWorldError),
+    #[error("LeaveWorldError: {0}")]
+    LeaveWorldError(#[from] LeaveWorldError),
+    #[error("CloseSocketError: {0}")]
+    CloseSocketError(#[from] CloseSocketError),
 }
 
-impl fmt::Display for OnUpdateError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::DebugError((a, d)) => write!(f, "Handled Debug for: {:?}, Packet: {:?}", a, d),
-            Self::NotImplementedAction(packet) => {
-                let mut out = format!("action {:?} is not implemented", &packet.action);
-                if packet.action == Action::UNKNOWN {
-                    out = format!("{}({}): {:?}", out, packet.real_action, packet.as_bytes());
-                }
-                write!(f, "{}", out)
-            }
-            Self::ResponsePacketTypeNotExist(a) => {
-                write!(f, "response type for action {:?} is not exists", a)
-            }
-            Self::AttachToGameError(e) => write!(f, "AttachToGameError: {}", e),
-            Self::RegisterNameError(e) => write!(f, "RegisterNameError: {}", e),
-            Self::SetPlayerDataError(e) => write!(f, "SetPlayerDataError: {}", e),
-            Self::SetGameDataError(e) => write!(f, "SetGameDataError: {}", e),
-            Self::GetGameDataError(e) => write!(f, "GetGameDataError: {}", e),
-            Self::CreateObjectError(e) => write!(f, "CreateObjectError: {}", e),
-            Self::UpdateObjectError(e) => write!(f, "UpdateObjectError: {}", e),
-            Self::DeleteObjectError(e) => write!(f, "DeleteObjectError: {}", e),
-            Self::DirectSendingError(e) => write!(f, "DirectSendingError: {}", e),
-            Self::TotalPlayersDataQueryError(e) => write!(f, "TotalPlayersDataQueryError: {}", e),
-            Self::SetWorldError(e) => write!(f, "SetWorldError: {}", e),
-            Self::LeaveWorldError(e) => write!(f, "LeaveWorldError: {}", e),
-            Self::CloseSocketError(e) => write!(f, "CloseSocketError: {}", e),
-        }
+fn not_implemented_errdisplay(packet: &Packet) -> String {
+    let mut out = format!("action {:?} is not implemented", &packet.action);
+    if packet.action == Action::UNKNOWN {
+        out.push_str(&format!("{}({}): {:?}", out, packet.real_action, packet.as_bytes()));
     }
+    out
 }
 
 #[derive(Debug)]

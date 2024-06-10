@@ -23,12 +23,6 @@ pub enum SetWorldError {
     // DataParse,
 }
 
-impl From<SetWorldError> for OnUpdateError {
-    fn from(from: SetWorldError) -> Self {
-        Self::SetWorldError(from)
-    }
-}
-
 #[allow(non_camel_case_types)]
 pub(super) trait OnUpdate_SetWorld {
     fn set_world(

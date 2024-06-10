@@ -16,12 +16,6 @@ pub enum AttachToGameError {
     Full(u32),
 }
 
-impl From<AttachToGameError> for OnUpdateError {
-    fn from(from: AttachToGameError) -> Self {
-        Self::AttachToGameError(from)
-    }
-}
-
 #[allow(non_camel_case_types)]
 pub(super) trait OnUpdate_AttachToGame {
     fn attach_to_game(

@@ -15,12 +15,6 @@ pub enum RegisterNameError {
     PlayerNotBind(ClientID),
 }
 
-impl From<RegisterNameError> for OnUpdateError {
-    fn from(from: RegisterNameError) -> Self {
-        Self::RegisterNameError(from)
-    }
-}
-
 #[allow(non_camel_case_types)]
 pub(super) trait OnUpdate_RegisterName {
     fn register_name(

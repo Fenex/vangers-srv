@@ -15,12 +15,6 @@ pub enum DeleteObjectError {
     PlayerNotBind(ClientID),
 }
 
-impl From<DeleteObjectError> for OnUpdateError {
-    fn from(from: DeleteObjectError) -> Self {
-        Self::DeleteObjectError(from)
-    }
-}
-
 #[allow(non_camel_case_types)]
 pub(super) trait OnUpdate_DeleteObject {
     fn delete_object(

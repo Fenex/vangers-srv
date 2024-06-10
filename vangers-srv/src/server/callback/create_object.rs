@@ -15,12 +15,6 @@ pub enum CreateObjectError {
     PlayerNotBind(ClientID),
 }
 
-impl From<CreateObjectError> for OnUpdateError {
-    fn from(from: CreateObjectError) -> Self {
-        Self::CreateObjectError(from)
-    }
-}
-
 #[allow(non_camel_case_types)]
 pub(super) trait OnUpdate_CreateObject {
     fn create_object(

@@ -18,12 +18,6 @@ pub enum CloseSocketError {
     PlayerNotBind(ClientID),
 }
 
-impl From<CloseSocketError> for OnUpdateError {
-    fn from(from: CloseSocketError) -> Self {
-        Self::CloseSocketError(from)
-    }
-}
-
 #[allow(non_camel_case_types)]
 pub(in crate::server) trait OnUpdate_CloseSocket {
     fn close_socket(

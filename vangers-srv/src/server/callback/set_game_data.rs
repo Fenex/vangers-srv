@@ -19,12 +19,6 @@ pub enum SetGameDataError {
     AlreadyConfigured(u32),
 }
 
-impl From<SetGameDataError> for OnUpdateError {
-    fn from(from: SetGameDataError) -> Self {
-        Self::SetGameDataError(from)
-    }
-}
-
 #[allow(non_camel_case_types)]
 pub(super) trait OnUpdate_SetGameData {
     fn set_game_data(

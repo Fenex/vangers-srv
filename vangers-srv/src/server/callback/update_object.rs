@@ -19,12 +19,6 @@ pub enum UpdateObjectError {
     PlayerNotBind(ClientID),
 }
 
-impl From<UpdateObjectError> for OnUpdateError {
-    fn from(from: UpdateObjectError) -> Self {
-        Self::UpdateObjectError(from)
-    }
-}
-
 #[allow(non_camel_case_types)]
 pub(super) trait OnUpdate_UpdateObject {
     fn update_object(

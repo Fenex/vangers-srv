@@ -10,12 +10,6 @@ pub enum TotalPlayersDataQueryError {
     PlayerNotFound(ClientID),
 }
 
-impl From<TotalPlayersDataQueryError> for OnUpdateError {
-    fn from(from: TotalPlayersDataQueryError) -> Self {
-        Self::TotalPlayersDataQueryError(from)
-    }
-}
-
 #[allow(non_camel_case_types)]
 pub(super) trait OnUpdate_TotalPlayersDataQuery {
     fn total_players_data_query(

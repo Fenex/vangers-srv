@@ -15,12 +15,6 @@ pub enum SetPlayerDataError {
     SliceToBodyParse(GameType),
 }
 
-impl From<SetPlayerDataError> for OnUpdateError {
-    fn from(from: SetPlayerDataError) -> Self {
-        Self::SetPlayerDataError(from)
-    }
-}
-
 #[allow(non_camel_case_types)]
 pub(super) trait OnUpdate_SetPlayerData {
     fn set_player_data(

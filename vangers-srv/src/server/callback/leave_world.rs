@@ -18,12 +18,6 @@ pub enum LeaveWorldError {
     BorrowWorld(ClientID, BorrowError),
 }
 
-impl From<LeaveWorldError> for OnUpdateError {
-    fn from(from: LeaveWorldError) -> Self {
-        Self::LeaveWorldError(from)
-    }
-}
-
 #[allow(non_camel_case_types)]
 pub(super) trait OnUpdate_LeaveWorld {
     fn leave_world(

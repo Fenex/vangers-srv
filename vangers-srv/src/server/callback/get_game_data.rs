@@ -12,12 +12,6 @@ pub enum GetGameDataError {
     NotConfigured(u32),
 }
 
-impl From<GetGameDataError> for OnUpdateError {
-    fn from(from: GetGameDataError) -> Self {
-        Self::GetGameDataError(from)
-    }
-}
-
 #[allow(non_camel_case_types)]
 pub(super) trait OnUpdate_GetGameData {
     fn get_game_data(
