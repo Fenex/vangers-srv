@@ -1,3 +1,5 @@
+use ::log::debug;
+
 use crate::client::ClientID;
 use crate::protocol::{Action, Packet};
 use crate::utils::slice_le_to_i32;
@@ -70,7 +72,7 @@ impl OnUpdate_DeleteObject for Server {
         // }
 
         if game.vanjects.remove(&vanject_id).is_none() {
-            println!("VANJECT with id=`{}` not found", vanject_id);
+            debug!("VANJECT with id=`{}` not found", vanject_id);
         }
 
         self.notify_game(client_id, &answer);

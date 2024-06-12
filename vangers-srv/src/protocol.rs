@@ -1,6 +1,7 @@
 use std::convert::TryFrom;
 
 use ::enum_primitive_derive::Primitive;
+use ::log::warn;
 use ::num_traits::{FromPrimitive, ToPrimitive};
 
 // Event's flags
@@ -172,8 +173,8 @@ impl Packet {
             let data = buff[3..].to_vec();
 
             if data.len() + 1 != usize::try_from(event_size).unwrap() {
-                println!(
-                    "Warning: `event_size` ({}) and real length ({}) of the packet are differents!",
+                warn!(
+                    "`event_size` ({}) and real length ({}) of the packet are differents!",
                     event_size,
                     data.len() + 1
                 );

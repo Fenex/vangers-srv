@@ -30,6 +30,8 @@ use set_world::*;
 use total_players_data_query::*;
 use update_object::*;
 
+use ::log::{trace, debug, info, warn, error};
+
 use crate::client::ClientID;
 use crate::protocol::{Action, Packet};
 use crate::Server;
@@ -92,15 +94,8 @@ pub(super) trait OnUpdate {
 
 impl OnUpdate for Server {
     fn on_update(&mut self, client_id: ClientID, packet: Packet) {
-        match &packet.action {
-            Action::SERVER_TIME_QUERY
-            | Action::CREATE_OBJECT
-            | Action::DELETE_OBJECT
-            | Action::UPDATE_OBJECT => {
-                // println!("[<-] {:?}: {:?}", packet.action, &packet.data);
-            }
-            a => println!("[<-] {:?}", a),
-        }
+
+        view ("[<-]", &packet);
 
         let result = match packet.action {
             Action::ATTACH_TO_GAME => self.attach_to_game(&packet, client_id),
@@ -127,7 +122,7 @@ impl OnUpdate for Server {
                     view("[->]", &packet);
                     client.send(&p);
                 } else {
-                    println!("Error: can't send response to client with id={}", client_id);
+                    warn!("Error: can't send response to client with id={}", client_id);
                 }
             }
             Ok(OnUpdateOk::Broadcast(p)) => {
@@ -140,15 +135,25 @@ impl OnUpdate for Server {
                     _ => view("[ok]", &packet),
                 };
             }
-            Err(err) => println!("{}", err),
+            Err(err) => error!("{}", err),
         }
     }
 }
 
 fn view(prefix: &str, p: &Packet) {
+    use Action::*;
+
     match &p.action {
-        Action::CREATE_OBJECT | Action::UPDATE_OBJECT | Action::DELETE_OBJECT => (),
-        Action::SERVER_TIME | Action::SERVER_TIME_QUERY | Action::SERVER_TIME_RESPONSE => (),
-        a => println!("{} {:?}", prefix, a),
+        a @ (CREATE_OBJECT | UPDATE_OBJECT | DELETE_OBJECT) => {
+            trace!("{} {:?}: {:X?}", prefix, a, &p.data);
+        },
+        a @ (SERVER_TIME | SERVER_TIME_QUERY | SERVER_TIME_RESPONSE) => {
+            trace!("{} {:?}: {:X?}", prefix, a, &p.data);
+        },
+        a @ GAMES_LIST_QUERY => debug!("{} {:?}", prefix, a),
+        a => {
+            debug!("{} {:?}: {:?}", prefix, a, &p.data);
+            info!("{} {:?}", prefix, a);
+        },
     }
 }

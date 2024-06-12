@@ -1,6 +1,8 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use ::log::info;
+
 use crate::game::World;
 use crate::protocol::NetTransportReceive;
 use crate::{client::ClientID, vanject::Pos};
@@ -99,7 +101,7 @@ impl Player {
 
         match self.body {
             Some(ref body) => {
-                println!(
+                info!(
                     "set body with color {} for player {}",
                     body.color, self.client_id
                 );

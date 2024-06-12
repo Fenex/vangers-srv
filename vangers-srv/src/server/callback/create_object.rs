@@ -1,3 +1,5 @@
+use ::log::{warn, debug};
+
 use crate::client::ClientID;
 use crate::protocol::{Action, NetTransportSend, Packet};
 use crate::vanject::*;
@@ -41,7 +43,7 @@ impl OnUpdate_CreateObject for Server {
         };
 
         if game.vanjects.contains_key(&vanject.id) {
-            println!("VANJECT with id=`{}` already exists", vanject.id);
+            debug!("VANJECT with id=`{}` already exists", vanject.id);
         } else {
             let player = game.get_mut_player(client_id).unwrap();
             if vanject.bind_to_player(player).is_err() {
@@ -52,7 +54,7 @@ impl OnUpdate_CreateObject for Server {
                 player.pos = vanject.pos;
 
                 if player.set_body(&vanject.body).is_err() {
-                    println!("NID::VANGER: set body failed");
+                    warn!("NID::VANGER: set body failed");
                 } else {
                     let data = vanject.to_vangers_byte();
                     let answer = Packet::new(Action::UPDATE_OBJECT, &data);
@@ -78,7 +80,7 @@ impl OnUpdate_CreateObject for Server {
                 } else {
                     if vanject.is_non_global() {
                         // world->process_create_inventory()
-                        println!(
+                        debug!(
                             "Added inventory vanject {:?} to player {}",
                             &vanject.id.to_le_bytes(),
                             vanject.player_bind_id

@@ -1,6 +1,7 @@
 use std::thread::sleep;
 use std::time::Duration;
 
+use ::log::{info, error};
 use ::tokio::net::TcpListener;
 use ::tokio::sync::mpsc;
 
@@ -162,16 +163,17 @@ impl Server {
         let (event_tx, mut event_rx) = mpsc::channel::<Event>(10);
 
         let endpoint = format!("0.0.0.0:{}", self.port);
+        println!("Server is listening on: {}", endpoint);
         let listener = TcpListener::bind(endpoint).await?;
 
         ::tokio::spawn(async move {
             // listening for connecting new clients
             loop {
                 if let Ok((stream, _)) = listener.accept().await {
-                    println!("====== new client connected ======");
+                    info!("====== new client connected ======");
                     let client = Client::new(stream, client_tx.clone());
                     if event_tx.send(Event::Add(client)).await.is_err() {
-                        println!("Terminate tcp-listener because of `event_rx` was closed.");
+                        error!("Terminate tcp-listener because of `event_rx` was closed.");
                         break;
                     }
                 }
