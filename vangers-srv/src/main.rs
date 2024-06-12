@@ -38,6 +38,7 @@ struct Opts {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    ::env_logger::init();
     let opts: Opts = Opts::parse();
 
     // let shell = ShellCmd::parse_from(vec!["", "tdest"]);
@@ -45,8 +46,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // println!("shell is: {:?}", shell);
 
     // println!("{:?}", s);
-
-    println!("starting server on port {}", opts.port);
 
     // /* SHELL INPUT COMMANDS */
     // tokio::spawn(async move {

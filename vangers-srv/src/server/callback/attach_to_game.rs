@@ -1,3 +1,5 @@
+use ::log::info;
+
 use crate::client::ClientID;
 use crate::player::Player;
 use crate::protocol::*;
@@ -54,7 +56,7 @@ impl OnUpdate_AttachToGame for Server {
             Some(p_id) => p_id,
         };
 
-        println!("=======!= ATTACHED PLAYER ID: {} =!=======", player_id);
+        info!("=======!= ATTACHED PLAYER ID: {} =!=======", player_id);
 
         let data = {
             // vanject ID offsets.

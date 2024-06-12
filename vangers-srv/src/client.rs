@@ -1,5 +1,6 @@
 use std::convert::TryFrom;
 
+use ::log::{warn, info, error};
 use ::tokio::io::{AsyncWriteExt, AsyncReadExt};
 use ::tokio::net::TcpStream;
 use ::tokio::sync::mpsc::{self, Receiver};
@@ -52,7 +53,7 @@ impl Client {
 
         ::tokio::spawn(async move {
             if tx.send(packet).await.is_err() {
-                println!("Error: send data via mpsc (Server => SendClient)");
+                warn!("Error: send data via mpsc (Server => SendClient)");
             }
         });
     }
@@ -65,7 +66,7 @@ impl Client {
             let protocol = match auth(&mut stream).await {
                 Ok(protocol_version) => protocol_version,
                 Err(err) => {
-                    eprintln!("auth failed: {}", err);
+                    info!("auth failed: {}", err);
                     stream.write(b"Auth failed, bye-bye\0").await.unwrap();
                     stream.shutdown().await.unwrap();
                     if tx_server
@@ -73,9 +74,7 @@ impl Client {
                         .await
                         .is_err()
                     {
-                        println!(
-                            "Error: Can't send `Connection::Disconnected` event to server receiver"
-                        );
+                        warn!("Can't send `Connection::Disconnected` event to server receiver");
                     }
                     return;
                 }
@@ -86,7 +85,7 @@ impl Client {
                 .await
                 .is_err()
             {
-                println!("Error: Can't send `Connection::Auth` event to server receiver");
+                warn!("Can't send `Connection::Auth` event to server receiver");
                 return;
             }
 
@@ -100,7 +99,7 @@ impl Client {
                         // dbg!(("send", id, q.unwrap(), &data[..]));
                     }
                     if sw.write(&data).await.is_err() {
-                        println!("error sending data to client");
+                        warn!("error sending data to client");
                         break;
                     }
                 }
@@ -111,7 +110,7 @@ impl Client {
             loop {
                 match sr.read(&mut buff[buff_offset..]).await {
                     Ok(_n @ 0) => {
-                        println!("Connection closed by client");
+                        info!("Connection closed by client");
                         tx_server
                             .send(MpscData(id, Connection::Disconnected))
                             .await
@@ -141,10 +140,10 @@ impl Client {
                             let packet_size = match usize::try_from(packet_size) {
                                 Ok(packet_size) => packet_size,
                                 Err(_) => {
-                                    println!("=================== ERROR ==================");
-                                    println!("packet_size < 0, iteration: {}", i);
-                                    println!("packet.data.parsed: {:?}", buff[..offset].to_vec());
-                                    println!("packet.data.failed: {:?}", buff[offset..].to_vec());
+                                    error!("=================== ERROR ==================");
+                                    error!("packet_size < 0, iteration: {}", i);
+                                    error!("packet.data.parsed: {:?}", buff[..offset].to_vec());
+                                    error!("packet.data.failed: {:?}", buff[offset..].to_vec());
                                     break;
                                 }
                             };
@@ -175,7 +174,7 @@ impl Client {
                         buff_offset = buff_readable_size - offset;
                     }
                     _ => {
-                        println!("Connection closed (I/O ERROR)");
+                        warn!("Connection closed (I/O ERROR)");
                         tx_server
                             .send(MpscData(id, Connection::Disconnected))
                             .await

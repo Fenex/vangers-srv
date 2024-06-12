@@ -30,8 +30,6 @@ impl OnUpdate_DirectSending for Server {
         packet: &Packet,
         client_id: ClientID,
     ) -> Result<OnUpdateOk, OnUpdateError> {
-        println!("DIRECT_SENDING: {:?}", packet.data);
-
         if packet.data.len() < 4 + 1 + 1 {
             return Err(DirectSendingError::Parse.into());
         }
