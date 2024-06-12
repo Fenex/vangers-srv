@@ -8,8 +8,8 @@ edition = "2018"
 
 [dependencies]
 rand = "0.8"
-tokio = { version = "1.35", features = ["full"] }
-enum-primitive-derive = "0.2"
+tokio = { version = "1.38", features = ["full"] }
+enum-primitive-derive = "0.3"
 num-traits = "0.2"
 encoding = "0.2"
 clap = { version = "4.4", features = ["derive"] }

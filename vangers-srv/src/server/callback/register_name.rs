@@ -1,5 +1,3 @@
-use std::fmt;
-
 use crate::client::ClientID;
 use crate::protocol::Packet;
 use crate::utils::get_first_cstr;
@@ -7,31 +5,14 @@ use crate::Server;
 
 use super::{OnUpdateError, OnUpdateOk};
 
-#[derive(Debug)]
+#[derive(Debug, ::thiserror::Error)]
 pub enum RegisterNameError {
+    #[error("player with `client_id`={0} not found")]
     PlayerNotFound(ClientID),
+    #[error("name or password is not a C-style string")]
     NameOrPasswordParse,
+    #[error("player with `client_id`={0} not bind to client object")]
     PlayerNotBind(ClientID),
-}
-
-impl fmt::Display for RegisterNameError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::PlayerNotFound(id) => write!(f, "player with `client_id`={} not found", id),
-            Self::NameOrPasswordParse => write!(f, "name or password is not a C-style string"),
-            Self::PlayerNotBind(id) => write!(
-                f,
-                "player with `client_id`={} not bind to client object",
-                id
-            ),
-        }
-    }
-}
-
-impl From<RegisterNameError> for OnUpdateError {
-    fn from(from: RegisterNameError) -> Self {
-        Self::RegisterNameError(from)
-    }
 }
 
 #[allow(non_camel_case_types)]

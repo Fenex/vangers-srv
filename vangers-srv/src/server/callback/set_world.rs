@@ -1,5 +1,4 @@
 use std::cell::RefCell;
-use std::fmt;
 use std::rc::Rc;
 
 use crate::client::ClientID;
@@ -12,33 +11,16 @@ use crate::Server;
 
 use super::{OnUpdateError, OnUpdateOk};
 
-#[derive(Debug)]
+#[derive(Debug, ::thiserror::Error)]
 pub enum SetWorldError {
+    #[error("player with client_id `{0}` not found")]
     PlayerNotFound(ClientID),
+    #[error("player with client_id `{0}` not bind")]
     PlayerNotBind(ClientID),
+    #[error("invalid world size: expected `{0}`, given `{1}`")]
     InvalidWorldSize(i16, i16),
-    DataParse,
-}
-
-impl fmt::Display for SetWorldError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::PlayerNotFound(id) => write!(f, "player with client_id `{}` not found", id),
-            Self::PlayerNotBind(id) => write!(f, "player with client_id `{}` not bind", id),
-            Self::InvalidWorldSize(expected, given) => write!(
-                f,
-                "invalid world size: expected `{}`, given `{}`",
-                expected, given
-            ),
-            Self::DataParse => write!(f, "fail read data slice"),
-        }
-    }
-}
-
-impl From<SetWorldError> for OnUpdateError {
-    fn from(from: SetWorldError) -> Self {
-        Self::SetWorldError(from)
-    }
+    // #[error("fail read data slice")]
+    // DataParse,
 }
 
 #[allow(non_camel_case_types)]

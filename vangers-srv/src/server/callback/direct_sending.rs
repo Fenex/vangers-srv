@@ -1,5 +1,3 @@
-use std::fmt;
-
 use crate::client::ClientID;
 use crate::protocol::Packet;
 use crate::utils;
@@ -7,31 +5,14 @@ use crate::Server;
 
 use super::{OnUpdateError, OnUpdateOk};
 
-#[derive(Debug)]
+#[derive(Debug, ::thiserror::Error)]
 pub enum DirectSendingError {
+    #[error("given data is too small")]
     Parse,
+    #[error("cannot parse c-string")]
     String,
+    #[error("player with client_id=`{0}` not bind to connection or not exists")]
     TxPlayerNotFound(ClientID),
-}
-
-impl fmt::Display for DirectSendingError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Parse => write!(f, "given data is too small"),
-            Self::String => write!(f, "cannot parse c-string"),
-            Self::TxPlayerNotFound(c_id) => write!(
-                f,
-                "player with client_id=`{}` not bind to connection or not exists",
-                c_id
-            ),
-        }
-    }
-}
-
-impl From<DirectSendingError> for OnUpdateError {
-    fn from(from: DirectSendingError) -> Self {
-        Self::DirectSendingError(from)
-    }
 }
 
 #[allow(non_camel_case_types)]

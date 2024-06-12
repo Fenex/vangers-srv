@@ -1,5 +1,3 @@
-use std::fmt;
-
 use crate::player::Status as PlayerStatus;
 use crate::protocol::{Action, Packet};
 // use crate::vanject::{VanjectError};
@@ -8,31 +6,16 @@ use crate::Server;
 
 use super::{OnUpdateError, OnUpdateOk, OnUpdate_LeaveWorld};
 
-#[derive(Debug)]
+#[derive(Debug, ::thiserror::Error)]
 pub enum CloseSocketError {
-    SliceTooSmall,
+    // #[error("fail read slice as vanject: [too small slice]")]
+    // SliceTooSmall,
     // SliceToVanjectParse(VanjectError),
+    #[error("player with `client_id`={0} not found")]
     PlayerNotFound(ClientID),
     // VanjectNotFound(i32),
+    #[error("player with `client_id`={0} not bind")]
     PlayerNotBind(ClientID),
-}
-
-impl fmt::Display for CloseSocketError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::SliceTooSmall => write!(f, "fail read slice as vanject: [too small slice]"),
-            // Self::SliceToVanjectParse(e) => write!(f, "fail read slice as vanject: [{}]", e),
-            Self::PlayerNotFound(id) => write!(f, "player with `client_id`={} not found", id),
-            // Self::VanjectNotFound(id) => write!(f, "vanject with `id`={} not found", id),
-            Self::PlayerNotBind(id) => write!(f, "player with `client_id`={} not bind", id),
-        }
-    }
-}
-
-impl From<CloseSocketError> for OnUpdateError {
-    fn from(from: CloseSocketError) -> Self {
-        Self::CloseSocketError(from)
-    }
 }
 
 #[allow(non_camel_case_types)]

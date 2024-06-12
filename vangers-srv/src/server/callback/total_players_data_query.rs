@@ -1,28 +1,13 @@
-use std::fmt;
-
 use crate::client::ClientID;
 use crate::protocol::{NetTransportSend, Packet};
 use crate::Server;
 
 use super::{OnUpdateError, OnUpdateOk};
 
-#[derive(Debug)]
+#[derive(Debug, ::thiserror::Error)]
 pub enum TotalPlayersDataQueryError {
+    #[error("player with client_id `{0}` not found")]
     PlayerNotFound(ClientID),
-}
-
-impl fmt::Display for TotalPlayersDataQueryError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::PlayerNotFound(id) => write!(f, "player with client_id `{}` not found", id),
-        }
-    }
-}
-
-impl From<TotalPlayersDataQueryError> for OnUpdateError {
-    fn from(from: TotalPlayersDataQueryError) -> Self {
-        Self::TotalPlayersDataQueryError(from)
-    }
 }
 
 #[allow(non_camel_case_types)]

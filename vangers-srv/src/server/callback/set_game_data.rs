@@ -1,5 +1,3 @@
-use std::fmt;
-
 use crate::client::ClientID;
 use crate::protocol::Packet;
 use crate::utils::get_first_cstr;
@@ -7,31 +5,18 @@ use crate::Server;
 
 use super::{OnUpdateError, OnUpdateOk};
 
-#[derive(Debug)]
+#[derive(Debug, ::thiserror::Error)]
 pub enum SetGameDataError {
+    #[error("parse name failed")]
     NameParse,
+    #[error("name is empty")]
     NameEmpty,
+    #[error("fail read slice as game config")]
     SliceToGameConfigParse,
+    #[error("player with client_id `{0}` not found")]
     PlayerNotFound(ClientID),
+    #[error("game with game_id `{0}` already configured")]
     AlreadyConfigured(u32),
-}
-
-impl fmt::Display for SetGameDataError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::NameParse => write!(f, "parse name failed"),
-            Self::NameEmpty => write!(f, "name is empty"),
-            Self::SliceToGameConfigParse => write!(f, "fail read slice as game config"),
-            Self::PlayerNotFound(p) => write!(f, "player with client_id `{}` not found", p),
-            Self::AlreadyConfigured(g) => write!(f, "game with game_id `{}` already configured", g),
-        }
-    }
-}
-
-impl From<SetGameDataError> for OnUpdateError {
-    fn from(from: SetGameDataError) -> Self {
-        Self::SetGameDataError(from)
-    }
 }
 
 #[allow(non_camel_case_types)]

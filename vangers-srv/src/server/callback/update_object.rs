@@ -1,5 +1,3 @@
-use std::fmt;
-
 use crate::protocol::{Action, NetTransportSend, Packet};
 use crate::vanject::{VanjectError, NID};
 use crate::Server;
@@ -7,31 +5,18 @@ use crate::{client::ClientID, utils::slice_le_to_i32};
 
 use super::{OnUpdateError, OnUpdateOk};
 
-#[derive(Debug)]
+#[derive(Debug, ::thiserror::Error)]
 pub enum UpdateObjectError {
+    #[error("fail read slice as vanject: [too small slice]")]
     SliceTooSmall,
+    #[error("fail read slice as vanject: [{0}]")]
     SliceToVanjectParse(VanjectError),
+    #[error("player with `client_id`={0} not found")]
     PlayerNotFound(ClientID),
+    #[error("vanject with `id`={0} not found")]
     VanjectNotFound(i32),
+    #[error("player with `client_id`={0} not bind")]
     PlayerNotBind(ClientID),
-}
-
-impl fmt::Display for UpdateObjectError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::SliceTooSmall => write!(f, "fail read slice as vanject: [too small slice]"),
-            Self::SliceToVanjectParse(e) => write!(f, "fail read slice as vanject: [{}]", e),
-            Self::PlayerNotFound(id) => write!(f, "player with `client_id`={} not found", id),
-            Self::VanjectNotFound(id) => write!(f, "vanject with `id`={} not found", id),
-            Self::PlayerNotBind(id) => write!(f, "player with `client_id`={} not bind", id),
-        }
-    }
-}
-
-impl From<UpdateObjectError> for OnUpdateError {
-    fn from(from: UpdateObjectError) -> Self {
-        Self::UpdateObjectError(from)
-    }
 }
 
 #[allow(non_camel_case_types)]
