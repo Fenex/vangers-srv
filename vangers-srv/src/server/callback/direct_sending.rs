@@ -1,3 +1,6 @@
+use std::borrow::Cow;
+use std::io::Write;
+
 use crate::client::ClientID;
 use crate::protocol::Packet;
 use crate::utils;
@@ -54,10 +57,24 @@ impl OnUpdate_DirectSending for Server {
             }
         }
 
-        let msg = match utils::get_first_cstr(&packet.data[4..]) {
-            Some(msg) => msg,
-            None => return Err(DirectSendingError::String.into()),
+        let Some(msg) = utils::get_first_cstr(&packet.data[4..]) else {
+            Err(DirectSendingError::String)?
         };
+
+        let mut msg = Cow::Borrowed(msg);
+
+        // TODO: take out to config this constant
+        const LIMIT_MSG_LEN: usize = 140;
+        if msg.len() > LIMIT_MSG_LEN {
+            msg = Cow::Owned({
+                let mut buffer = Vec::with_capacity(LIMIT_MSG_LEN);
+                buffer.write(&msg[0..LIMIT_MSG_LEN - 3 - 1]).ok();
+                buffer.write(b"...").ok();
+                buffer.push(0);
+                buffer
+            })
+        }
+
         let player_id = match player_id {
             Some(p_id) => p_id,
             None => return Err(DirectSendingError::TxPlayerNotFound(client_id).into()),
