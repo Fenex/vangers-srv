@@ -10,7 +10,7 @@ pub enum UpdateObjectError {
     #[error("fail read slice as vanject: [too small slice]")]
     SliceTooSmall,
     #[error("fail read slice as vanject: [{0}]")]
-    SliceToVanjectParse(VanjectError),
+    SliceToVanjectParse(#[from] VanjectError),
     #[error("player with `client_id`={0} not found")]
     PlayerNotFound(ClientID),
     #[error("vanject with `id`={0} not found")]
@@ -35,28 +35,30 @@ impl OnUpdate_UpdateObject for Server {
         client_id: ClientID,
     ) -> Result<OnUpdateOk, OnUpdateError> {
         if packet.data.len() < 4 {
-            return Err(UpdateObjectError::SliceTooSmall.into());
+            Err(UpdateObjectError::SliceTooSmall)?
         }
 
         let vanject_id = slice_le_to_i32(&packet.data[0..4]);
 
-        let game = match self.get_mut_game_by_clientid(client_id) {
-            Some(game) => game,
-            None => return Err(UpdateObjectError::PlayerNotFound(client_id).into()),
-        };
+        let game = self
+            .get_mut_game_by_clientid(client_id)
+            .ok_or(UpdateObjectError::PlayerNotFound(client_id))?;
 
-        let player_bind_id = match game.get_player(client_id).unwrap().bind {
-            Some(bind) => bind.id(),
-            None => return Err(UpdateObjectError::PlayerNotBind(client_id).into()),
-        };
+        let player_bind_id = game
+            .get_player(client_id)
+            .expect("we got game by this player in line above")
+            .bind
+            .map(|bind| bind.id())
+            .ok_or(UpdateObjectError::PlayerNotBind(client_id))?;
 
         let mut packets: Vec<Packet> = vec![];
 
         match game.vanjects.get_mut(&vanject_id) {
             Some(vanject) => {
-                if let Err(err) = vanject.update_from_slice(&packet.data) {
-                    return Err(UpdateObjectError::SliceToVanjectParse(err).into());
-                }
+                vanject
+                    .update_from_slice(&packet.data)
+                    .map_err(UpdateObjectError::SliceToVanjectParse)?;
+
                 vanject.player_bind_id = player_bind_id;
                 if vanject.get_type() == NID::VANGER {
                     let data = std::iter::empty()
@@ -72,7 +74,7 @@ impl OnUpdate_UpdateObject for Server {
                     &vanject.to_vangers_byte(),
                 ));
             }
-            None => return Err(UpdateObjectError::VanjectNotFound(vanject_id).into()),
+            None => Err(UpdateObjectError::VanjectNotFound(vanject_id))?,
         }
 
         for p in packets {

@@ -115,7 +115,7 @@ impl NetTransportSend for Pos<i16> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, ::thiserror::Error)]
 pub enum VanjectError {
     SliceTooSmall,
     Update(VanjectUpdateError),
