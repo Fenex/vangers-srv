@@ -41,10 +41,9 @@ impl OnUpdate_SetWorld for Server {
         let world_id = packet.data[0];
         let world_y_size = slice_le_to_i16(&packet.data[1..3]);
 
-        let game = match self.get_mut_game_by_clientid(client_id) {
-            Some(game) => game,
-            None => return Err(SetWorldError::PlayerNotFound(client_id).into()),
-        };
+        let game = self
+            .get_mut_game_by_clientid(client_id)
+            .ok_or(SetWorldError::PlayerNotFound(client_id))?;
 
         // Must be sets to `1` if new world was created
         let mut world_status = 0u8;
@@ -52,9 +51,10 @@ impl OnUpdate_SetWorld for Server {
         // TODO: take out below if-else code into Game struct
         let world = if let Some(world) = game.worlds.iter().find(|w| w.borrow().id == world_id) {
             if world.borrow().y_size != world_y_size {
-                return Err(
-                    SetWorldError::InvalidWorldSize(world.borrow().y_size, world_y_size).into(),
-                );
+                Err(SetWorldError::InvalidWorldSize(
+                    world.borrow().y_size,
+                    world_y_size,
+                ))?
             }
             Rc::clone(world)
         } else {
@@ -69,10 +69,10 @@ impl OnUpdate_SetWorld for Server {
         };
 
         let player = game.get_mut_player(client_id).unwrap();
-        let player_bind_id = match player.bind {
-            Some(bind) => bind.id(),
-            None => return Err(SetWorldError::PlayerNotBind(client_id).into()),
-        };
+        let player_bind_id = player
+            .bind
+            .map(|bind| bind.id())
+            .ok_or(SetWorldError::PlayerNotBind(client_id))?;
 
         // get all dropped items and items inside inventories of all players in the current world
         let inventories_vanject = game
