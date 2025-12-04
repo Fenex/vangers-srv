@@ -11,7 +11,7 @@ pub struct VanWarStatistics {
 
 impl PlayerStatistics for VanWarStatistics {
     fn get_struct_size() -> usize {
-        return 4 * std::mem::size_of::<i32>();
+        4 * std::mem::size_of::<i32>()
     }
 }
 
@@ -22,7 +22,7 @@ impl NetTransportSend for VanWarStatistics {
             .chain(&self.min_live_time.to_le_bytes())
             .chain(&self.kill_freq.to_le_bytes())
             .chain(&self.death_freaq.to_le_bytes())
-            .map(|&b| b)
+            .copied()
             .collect()
     }
 }

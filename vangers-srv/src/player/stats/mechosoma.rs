@@ -13,7 +13,7 @@ pub struct MechosomaStatistic {
 
 impl PlayerStatistics for MechosomaStatistic {
     fn get_struct_size() -> usize {
-        return 6 * std::mem::size_of::<i32>();
+        6 * std::mem::size_of::<i32>()
     }
 }
 
@@ -26,7 +26,7 @@ impl NetTransportSend for MechosomaStatistic {
             .chain(&self.min_transit_time.to_le_bytes())
             .chain(&self.sneak_count.to_le_bytes())
             .chain(&self.lost_count.to_le_bytes())
-            .map(|&b| b)
+            .copied()
             .collect()
     }
 }

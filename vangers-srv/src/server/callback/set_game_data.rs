@@ -43,7 +43,7 @@ impl OnUpdate_SetGameData for Server {
         };
 
         let name = match get_first_cstr(&packet.data) {
-            Some(name) if name.len() == 0 => return Err(SetGameDataError::NameEmpty.into()),
+            Some([]) => return Err(SetGameDataError::NameEmpty.into()),
             Some(name) => name,
             None => return Err(SetGameDataError::NameParse.into()),
         };

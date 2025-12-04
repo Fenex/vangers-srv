@@ -9,8 +9,8 @@ use crate::num_traits::FromPrimitive;
 
 use super::protocol::*;
 
-const HS_IN: &'static [u8] = b"Vivat Sicher, Rock'n'Roll forever!!!";
-const HS_OUT: &'static [u8] = b"Enter, my son, please...";
+const HS_IN: &[u8] = b"Vivat Sicher, Rock'n'Roll forever!!!";
+const HS_OUT: &[u8] = b"Enter, my son, please...";
 
 pub type ClientID = usize;
 
@@ -30,10 +30,7 @@ impl PartialEq for Connection {
         use Connection::Connected as C;
         use Connection::Disconnected as D;
 
-        match (self, other) {
-            (A(_), A(_)) | (C, C) | (D, D) => true,
-            _ => false,
-        }
+        matches!((self, other), (A(_), A(_)) | (C, C) | (D, D))
     }
 }
 
@@ -228,34 +225,34 @@ async fn auth(stream: &mut TcpStream) -> Result<u8, AuthError> {
     let mut buff = [0u8; 256];
 
     match stream.read(&mut buff).await {
-        Ok(_n @ 0) => return Err(ClosedByClient),
+        Ok(_n @ 0) => Err(ClosedByClient)?,
         Ok(_n) => {
             if let Some(pos) = buff.iter().position(|&b| b == 0) {
                 if !HS_IN.eq(&buff[0..pos]) {
-                    return Err(HsUnexpectedRequestHeader);
+                    Err(HsUnexpectedRequestHeader)?
                 }
 
                 let protocol_version = buff[pos + 1];
 
                 if !matches!(protocol_version, 1 | 2) {
-                    return Err(HsUnexpectedProtocolVersion(&[1, 2], protocol_version));
+                    Err(HsUnexpectedProtocolVersion(&[1, 2], protocol_version))?
                 }
 
                 let send = HS_OUT
-                    .into_iter()
+                    .iter()
                     .chain(&[0u8, protocol_version])
-                    .map(|&u| u)
+                    .copied()
                     .collect::<Vec<_>>();
 
                 if let Err(_) = stream.write(&send).await {
-                    return Err(HsResponse);
+                    Err(HsResponse)?
                 }
 
-                return Ok(protocol_version);
+                Ok(protocol_version)
             } else {
-                return Err(HsZeroTerminated);
+                Err(HsZeroTerminated)
             }
         }
-        _ => return Err(Connection),
+        _ => Err(Connection),
     }
 }

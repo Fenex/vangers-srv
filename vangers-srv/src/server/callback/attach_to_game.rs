@@ -89,7 +89,7 @@ impl OnUpdate_AttachToGame for Server {
                 .chain(&(game.birth_time.as_secs_u32() as i32).to_le_bytes())
                 .chain(&player_id.to_le_bytes())
                 .chain(&offsets[..]) //object_ID_offsets
-                .map(|&b| b)
+                .copied()
                 .collect()
         };
 
@@ -110,8 +110,7 @@ impl OnUpdate_AttachToGame for Server {
         if self
             .clients
             .iter()
-            .find(|c| c.id == client_id && c.protocol > 1)
-            .is_some()
+            .any(|c| c.id == client_id && c.protocol > 1)
         {
             let now = std::time::SystemTime::now();
             let unix = now.duration_since(std::time::UNIX_EPOCH).unwrap().as_secs() as u32;
@@ -121,7 +120,7 @@ impl OnUpdate_AttachToGame for Server {
 
         packets
             .iter()
-            .for_each(|packet| self.notify_player(client_id, &packet));
+            .for_each(|packet| self.notify_player(client_id, packet));
 
         Ok(OnUpdateOk::Complete)
     }

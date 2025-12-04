@@ -11,7 +11,7 @@ pub struct PassemblossStatistic {
 
 impl PlayerStatistics for PassemblossStatistic {
     fn get_struct_size() -> usize {
-        return 4 * std::mem::size_of::<i32>();
+        4 * std::mem::size_of::<i32>()
     }
 }
 
@@ -22,7 +22,7 @@ impl NetTransportSend for PassemblossStatistic {
             .chain(&self.checkpoint_lighting.to_le_bytes())
             .chain(&self.min_time.to_le_bytes())
             .chain(&self.max_time.to_le_bytes())
-            .map(|&b| b)
+            .copied()
             .collect()
     }
 }

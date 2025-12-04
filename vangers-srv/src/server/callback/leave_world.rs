@@ -66,7 +66,7 @@ impl OnUpdate_LeaveWorld for Server {
                             .chain(&id.to_le_bytes())
                             .chain(&[player_bind_id])
                             .chain(&v.time.to_le_bytes())
-                            .map(|&b| b)
+                            .copied()
                             .collect::<Vec<_>>(),
                     ),
                 )

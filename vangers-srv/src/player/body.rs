@@ -48,7 +48,7 @@ impl Body {
 
 impl NetTransportSend for Body {
     fn to_vangers_byte(&self) -> Vec<u8> {
-        vec![self.kills, self.deaths, self.color, self.world]
+        [self.kills, self.deaths, self.color, self.world]
             .iter()
             .chain(&self.beebos.to_le_bytes())
             .chain(&self.rating.to_le_bytes())
@@ -58,7 +58,7 @@ impl NetTransportSend for Body {
             .chain(&self.birth_time.to_le_bytes())
             .chain(&self.net_id.to_le_bytes())
             .chain(&self.stats)
-            .map(|&b| b)
+            .copied()
             .collect::<Vec<_>>()
     }
 }

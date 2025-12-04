@@ -65,9 +65,9 @@ impl OnUpdate_TotalPlayersDataQuery for Server {
                 .chain(&[status])
                 .chain(&[world])
                 .chain(&player.pos.to_vangers_byte())
-                .chain(&name[..])
+                .chain(name)
                 .chain(&body)
-                .map(|&b| b)
+                .copied()
                 .collect::<Vec<_>>();
 
             data.append(&mut p_data);
@@ -79,7 +79,7 @@ impl OnUpdate_TotalPlayersDataQuery for Server {
 
         packet
             .create_answer(data)
-            .and_then(|p| Some(OnUpdateOk::Response(p)))
+            .map(OnUpdateOk::Response)
             .ok_or(OnUpdateError::ResponsePacketTypeNotExist(packet.action))
     }
 }

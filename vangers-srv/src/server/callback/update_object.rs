@@ -62,7 +62,7 @@ impl OnUpdate_UpdateObject for Server {
                     let data = std::iter::empty()
                         .chain(&[vanject.player_bind_id])
                         .chain(&vanject.pos.to_vangers_byte())
-                        .map(|&b| b)
+                        .copied()
                         .collect::<Vec<_>>();
                     packets.push(Packet::new(Action::PLAYERS_POSITION, &data));
                 }

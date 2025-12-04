@@ -73,7 +73,7 @@ impl NetTransportSend for Config {
             .chain(&self.artefacts_using.to_le_bytes())
             .chain(&self.in_escave_time.to_le_bytes())
             .chain(&self.color.to_le_bytes())
-            .map(|&b| b)
+            .copied()
             .collect::<Vec<_>>();
 
         let mut game_mode = match &self.game_type {
@@ -120,20 +120,18 @@ impl NetTransportReceive for Config {
             (Some(gt), len) if gt == Type::MUSTODONT && len >= size_of::<Mustodont>() => {
                 Some(GameMode::Mustodont(Mustodont::from_slice(&slice[24..])))
             }
-            (Some(gt), _) if gt == Type::HUNTAGE => Some(GameMode::Huntage),
-            (Some(gt), _) if gt == Type::MIR_RAGE => Some(GameMode::MirRage),
+            (Some(Type::HUNTAGE), _) => Some(GameMode::Huntage),
+            (Some(Type::MIR_RAGE), _) => Some(GameMode::MirRage),
             _ => None,
         };
 
-        game_type.and_then(|game_type| {
-            Some(Self {
-                initial_rnd,
-                initial_cash,
-                artefacts_using,
-                in_escave_time,
-                color,
-                game_type,
-            })
+        game_type.map(|game_type| Self {
+            initial_rnd,
+            initial_cash,
+            artefacts_using,
+            in_escave_time,
+            color,
+            game_type,
         })
     }
 }

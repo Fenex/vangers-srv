@@ -37,7 +37,7 @@ impl OnUpdate_GamesListQuery for Server {
                 _ => '?',
             };
 
-            let title_head = format!("[Rust-SRV] ");
+            let title_head = String::from("[Rust-SRV] ");
             let title_tail = format!(
                 ": {} {} {}",
                 game.players.len(),
@@ -56,7 +56,7 @@ impl OnUpdate_GamesListQuery for Server {
                 .chain(title)
                 .chain(CString::new(title_tail).unwrap().as_bytes())
                 .chain(&[0]) // null terminator of the c-style string
-                .map(|&b| b)
+                .copied()
                 .collect::<Vec<_>>();
 
             data.append(&mut game.id.to_le_bytes().to_vec());
@@ -69,7 +69,7 @@ impl OnUpdate_GamesListQuery for Server {
 
         packet
             .create_answer(data)
-            .and_then(|p| Some(OnUpdateOk::Response(p)))
+            .map(OnUpdateOk::Response)
             .ok_or(OnUpdateError::ResponsePacketTypeNotExist(packet.action))
     }
 }

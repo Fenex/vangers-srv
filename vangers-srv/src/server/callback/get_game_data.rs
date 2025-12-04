@@ -39,12 +39,12 @@ impl OnUpdate_GetGameData for Server {
         let data = std::iter::empty()
             .chain(&game.name)
             .chain(&game.config.as_ref().unwrap().to_vangers_byte())
-            .map(|&b| b)
+            .copied()
             .collect();
 
         packet
             .create_answer(data)
-            .and_then(|p| Some(OnUpdateOk::Response(p)))
+            .map(OnUpdateOk::Response)
             .ok_or(OnUpdateError::ResponsePacketTypeNotExist(packet.action))
     }
 }

@@ -51,7 +51,7 @@ impl OnUpdate_DeleteObject for Server {
             .chain(&[player_auth_id])
             .chain(&packet.data[4..8])
             .chain(&packet.data[8..])
-            .map(|&b| b)
+            .copied()
             .collect::<Vec<_>>();
 
         let answer = Packet::new(Action::DELETE_OBJECT, &data);

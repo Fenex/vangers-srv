@@ -139,8 +139,8 @@ impl Server {
 
         self.clients
             .iter()
-            .filter(|c| client_ids.iter().any(|&id| id == c.id))
-            .for_each(|c| c.send(&packet));
+            .filter(|c| client_ids.contains(&c.id))
+            .for_each(|c| c.send(packet));
     }
 
     /// Sends `packet` to the current client only.

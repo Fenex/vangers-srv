@@ -6,7 +6,7 @@ use ::encoding::{DecoderTrap, Encoding};
 /// Returns a valid CStr with null-terminate byte from `bytes` slice.
 /// Returns `None` if the first byte is `0x00`
 pub fn get_first_cstr(bytes: &[u8]) -> Option<&[u8]> {
-    if bytes.len() == 0 || bytes[0] == 0 {
+    if bytes.is_empty() || bytes[0] == 0 {
         // return `None` if first byte is null-terminator
         return None;
     }
@@ -15,13 +15,12 @@ pub fn get_first_cstr(bytes: &[u8]) -> Option<&[u8]> {
         .iter()
         .enumerate()
         .find(|(_, &v)| v == 0)
-        .and_then(|(i, _)| Some(&bytes[0..=i]))
-    // .and_then(|(i, _)| CStr::from_bytes_with_nul(&bytes[0..=i]).ok())
+        .map(|(i, _)| &bytes[0..=i])
 }
 
 #[allow(dead_code)]
 pub fn convert_cp866_to_utf8(cstr: &[u8]) -> Option<String> {
-    IBM866.decode(&cstr, DecoderTrap::Replace).ok()
+    IBM866.decode(cstr, DecoderTrap::Replace).ok()
 }
 
 #[allow(dead_code)]

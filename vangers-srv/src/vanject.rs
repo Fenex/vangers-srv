@@ -110,7 +110,7 @@ impl NetTransportSend for Pos<i16> {
         std::iter::empty()
             .chain(&self.x.to_le_bytes())
             .chain(&self.y.to_le_bytes())
-            .map(|&b| b)
+            .copied()
             .collect()
     }
 }
@@ -256,7 +256,7 @@ impl Vanject {
             .chain(&self.pos.x.to_le_bytes())
             .chain(&self.pos.y.to_le_bytes())
             .chain(&self.body[..])
-            .map(|&b| b)
+            .copied()
             .collect::<Vec<_>>()
     }
 

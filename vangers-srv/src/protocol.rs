@@ -123,7 +123,7 @@ impl Packet {
             .chain(&event_size.to_le_bytes())
             .chain(&[action])
             .chain(&self.data)
-            .map(|&u| u)
+            .copied()
             .collect()
     }
 
@@ -140,13 +140,11 @@ impl Packet {
                 let event_size = i16::try_from(data.len() + 1).ok()?;
                 Some((action, event_size))
             })
-            .and_then(|(action, event_size)| {
-                Some(Self {
-                    action,
-                    real_action: action as u8,
-                    data,
-                    event_size,
-                })
+            .map(|(action, event_size)| Self {
+                action,
+                real_action: action as u8,
+                data,
+                event_size,
             })
     }
 

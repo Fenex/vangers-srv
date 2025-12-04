@@ -55,7 +55,7 @@ impl OnUpdate_SetPlayerData for Server {
         let data = std::iter::empty()
             .chain(&[player_id])
             .chain(&packet.data)
-            .map(|&b| b)
+            .copied()
             .collect::<Vec<_>>();
 
         let packet = match packet.create_answer(data) {

@@ -18,7 +18,7 @@ impl VanWar {
             .chain(&self.world_access.to_le_bytes())
             .chain(&self.max_kills.to_le_bytes())
             .chain(&(self.max_time as i32).to_le_bytes())
-            .map(|&b| b)
+            .copied()
             .collect()
     }
 
@@ -33,7 +33,7 @@ impl VanWar {
             world_access: slice_le_to_i32(&slice[8..12]),
             max_kills: slice_le_to_i32(&slice[12..16]),
             // max_time: slice_le_to_i32(&slice[16..20]),
-            max_time: std::i32::MAX as u32, // TODO: change to correct time set
+            max_time: i32::MAX as u32, // TODO: change to correct time set
         }
     }
 }
@@ -67,7 +67,7 @@ impl Mechosoma {
             .chain(&self.product_quantity2.to_le_bytes())
             .chain(&self.one_at_a_time.to_le_bytes())
             .chain(&self.team_mode.to_le_bytes())
-            .map(|&b| b)
+            .copied()
             .collect()
     }
 
@@ -109,7 +109,7 @@ impl Passembloss {
         std::iter::empty()
             .chain(&self.checkpoints_number.to_le_bytes())
             .chain(&self.random_escave.to_le_bytes())
-            .map(|&b| b)
+            .copied()
             .collect()
     }
 
@@ -134,7 +134,7 @@ impl Default for Passembloss {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Mustodont {
     pub unique_mechos_name: i32,
     pub team_mode: i32,
@@ -145,7 +145,7 @@ impl Mustodont {
         std::iter::empty()
             .chain(&self.unique_mechos_name.to_le_bytes())
             .chain(&self.team_mode.to_le_bytes())
-            .map(|&b| b)
+            .copied()
             .collect()
     }
 
@@ -157,15 +157,6 @@ impl Mustodont {
         Self {
             unique_mechos_name: slice_le_to_i32(&slice[0..4]),
             team_mode: slice_le_to_i32(&slice[4..8]),
-        }
-    }
-}
-
-impl Default for Mustodont {
-    fn default() -> Self {
-        Self {
-            unique_mechos_name: 0,
-            team_mode: 0,
         }
     }
 }

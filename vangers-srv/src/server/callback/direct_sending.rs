@@ -82,7 +82,7 @@ impl OnUpdate_DirectSending for Server {
         let data = std::iter::empty()
             .chain(&[player_id])
             .chain(&msg[..])
-            .map(|&b| b)
+            .copied()
             .collect::<Vec<_>>();
 
         let answer = match packet.create_answer(data) {
@@ -92,7 +92,7 @@ impl OnUpdate_DirectSending for Server {
 
         self.clients
             .iter_mut()
-            .filter(|c| client_ids.iter().find(|&&id| id == c.id).is_some())
+            .filter(|c| client_ids.contains(&c.id))
             .for_each(|c| c.send(&answer));
 
         Ok(OnUpdateOk::Complete)

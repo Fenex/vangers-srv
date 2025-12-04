@@ -37,7 +37,7 @@ impl OnUpdate_RegisterName for Server {
 
         let auth = get_first_cstr(&packet.data).and_then(|name| {
             // TODO: fix fail if password is empty
-            if name.len() > 0 {
+            if !name.is_empty() {
                 if let Some(pwd) = get_first_cstr(&packet.data[name.len()..]) {
                     // if pwd.len() > 0 {
                     return Some((name, pwd));
@@ -58,12 +58,12 @@ impl OnUpdate_RegisterName for Server {
             return Err(RegisterNameError::PlayerNotBind(client_id).into());
         }
 
-        assert!(auth.unwrap().0.len() != 0);
+        assert!(!auth.unwrap().0.is_empty());
 
         let data = std::iter::empty()
             .chain(&player.bind.unwrap().id().to_le_bytes())
             .chain(auth.unwrap().0)
-            .map(|&b| b)
+            .copied()
             .collect::<Vec<_>>();
 
         let answer = packet.create_answer(data).unwrap();

@@ -23,7 +23,7 @@ impl OnUpdate_ServerTimeQuery for Server {
 
         packet
             .create_answer(data.to_vec())
-            .and_then(|p| Some(OnUpdateOk::Response(p)))
+            .map(OnUpdateOk::Response)
             .ok_or(OnUpdateError::ResponsePacketTypeNotExist(packet.action))
     }
 }

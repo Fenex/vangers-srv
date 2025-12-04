@@ -35,7 +35,7 @@ impl Auth {
                 .to_owned(),
         };
 
-        let pwd = if pwd.len() > 0 {
+        let pwd = if !pwd.is_empty() {
             Some(get_hash_pwd(pwd))
         } else {
             None
@@ -45,7 +45,7 @@ impl Auth {
     }
 
     pub fn name(&self) -> &[u8] {
-        return &self.name;
+        &self.name
     }
 
     pub fn name_utf8(&self) -> String {

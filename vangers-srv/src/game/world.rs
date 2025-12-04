@@ -9,7 +9,7 @@ pub struct World {
     pub vanjects: HashMap<i32, Vanject>,
 }
 
-impl<'a> World {
+impl World {
     pub fn new(id: u8, y_size: i16) -> Self {
         Self {
             id,

@@ -11,7 +11,7 @@ pub struct MustodontStatistic {
 
 impl PlayerStatistics for MustodontStatistic {
     fn get_struct_size() -> usize {
-        return 4 * std::mem::size_of::<i32>();
+        4 * std::mem::size_of::<i32>()
     }
 }
 
@@ -22,7 +22,7 @@ impl NetTransportSend for MustodontStatistic {
             .chain(&self.part_time2.to_le_bytes())
             .chain(&self.body_time.to_le_bytes())
             .chain(&self.make_time.to_le_bytes())
-            .map(|&b| b)
+            .copied()
             .collect()
     }
 }

@@ -4,7 +4,7 @@ pub struct Bind(u8);
 impl Bind {
     // TODO: returns `Result` instead of `Self`
     pub fn new(id: u8) -> Self {
-        if id < 1 || id > 31 {
+        if !(1..=31).contains(&id) {
             panic!("`id` should be in range [1..32]");
         }
         Bind(id)

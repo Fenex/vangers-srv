@@ -37,17 +37,13 @@ impl Games {
 
     #[allow(dead_code)]
     pub fn get_player_by_client_id(&self, client_id: ClientID) -> Option<(&Game, &Player)> {
-        self.get_game_by_client_id(client_id).map_or(None, |game| {
-            match game.get_player(client_id) {
-                Some(player) => Some((game, player)),
-                None => None,
-            }
-        })
+        self.get_game_by_client_id(client_id)
+            .and_then(|game| game.get_player(client_id).map(|player| (game, player)))
     }
 
     pub fn get_mut_player_by_client_id(&mut self, client_id: ClientID) -> Option<&mut Player> {
         self.get_mut_game_by_client_id(client_id)
-            .map_or(None, |game| game.get_mut_player(client_id))
+            .and_then(|game| game.get_mut_player(client_id))
     }
 
     // TODO: convert `Err(String)` into `Err(Enum\Struct)`
