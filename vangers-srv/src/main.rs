@@ -15,11 +15,7 @@ use crate::server::Server;
 // use crate::shell::*;
 
 #[derive(Parser, Debug)]
-#[clap(
-    name = "Vangers Server",
-    version,
-    author
-)]
+#[clap(name = "Vangers Server", version, author)]
 struct Opts {
     #[clap(
         short,
@@ -28,7 +24,6 @@ struct Opts {
         help = "Server port to listening incoming in-game player connections"
     )]
     port: u16,
-
     // #[clap(short, long, help = "Accept incoming connections from localhost only")]
     // localhost: bool,
 

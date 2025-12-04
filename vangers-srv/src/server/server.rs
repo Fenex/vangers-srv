@@ -1,7 +1,7 @@
 use std::thread::sleep;
 use std::time::Duration;
 
-use ::log::{info, error};
+use ::log::{error, info};
 use ::tokio::net::TcpListener;
 use ::tokio::sync::mpsc;
 

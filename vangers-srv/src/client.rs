@@ -1,7 +1,7 @@
 use std::convert::TryFrom;
 
-use ::log::{warn, info, error};
-use ::tokio::io::{AsyncWriteExt, AsyncReadExt};
+use ::log::{error, info, warn};
+use ::tokio::io::{AsyncReadExt, AsyncWriteExt};
 use ::tokio::net::TcpStream;
 use ::tokio::sync::mpsc::{self, Receiver};
 
@@ -238,7 +238,7 @@ async fn auth(stream: &mut TcpStream) -> Result<u8, AuthError> {
                 let protocol_version = buff[pos + 1];
 
                 if !matches!(protocol_version, 1 | 2) {
-                    return Err(HsUnexpectedProtocolVersion(&[1, 2], protocol_version))
+                    return Err(HsUnexpectedProtocolVersion(&[1, 2], protocol_version));
                 }
 
                 let send = HS_OUT
@@ -253,7 +253,7 @@ async fn auth(stream: &mut TcpStream) -> Result<u8, AuthError> {
 
                 return Ok(protocol_version);
             } else {
-                return Err(HsZeroTerminated)
+                return Err(HsZeroTerminated);
             }
         }
         _ => return Err(Connection),

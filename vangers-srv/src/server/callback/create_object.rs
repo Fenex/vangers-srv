@@ -1,4 +1,4 @@
-use ::log::{warn, debug};
+use ::log::{debug, warn};
 
 use crate::client::ClientID;
 use crate::protocol::{Action, NetTransportSend, Packet};

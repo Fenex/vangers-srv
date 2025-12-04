@@ -30,7 +30,7 @@ use set_world::*;
 use total_players_data_query::*;
 use update_object::*;
 
-use ::log::{trace, debug, info, warn, error};
+use ::log::{debug, error, info, trace, warn};
 
 use crate::client::ClientID;
 use crate::protocol::{Action, Packet};
@@ -75,7 +75,12 @@ pub enum OnUpdateError {
 fn not_implemented_errdisplay(packet: &Packet) -> String {
     let mut out = format!("action {:?} is not implemented", &packet.action);
     if packet.action == Action::UNKNOWN {
-        out.push_str(&format!("{}({}): {:?}", out, packet.real_action, packet.as_bytes()));
+        out.push_str(&format!(
+            "{}({}): {:?}",
+            out,
+            packet.real_action,
+            packet.as_bytes()
+        ));
     }
     out
 }
@@ -94,8 +99,7 @@ pub(super) trait OnUpdate {
 
 impl OnUpdate for Server {
     fn on_update(&mut self, client_id: ClientID, packet: Packet) {
-
-        view ("[<-]", &packet);
+        view("[<-]", &packet);
 
         let result = match packet.action {
             Action::ATTACH_TO_GAME => self.attach_to_game(&packet, client_id),
@@ -146,14 +150,14 @@ fn view(prefix: &str, p: &Packet) {
     match &p.action {
         a @ (CREATE_OBJECT | UPDATE_OBJECT | DELETE_OBJECT) => {
             trace!("{} {:?}: {:X?}", prefix, a, &p.data);
-        },
+        }
         a @ (SERVER_TIME | SERVER_TIME_QUERY | SERVER_TIME_RESPONSE) => {
             trace!("{} {:?}: {:X?}", prefix, a, &p.data);
-        },
+        }
         a @ GAMES_LIST_QUERY => debug!("{} {:?}", prefix, a),
         a => {
             debug!("{} {:?}: {:?}", prefix, a, &p.data);
             info!("{} {:?}", prefix, a);
-        },
+        }
     }
 }
