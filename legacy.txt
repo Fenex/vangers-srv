@@ -1,0 +1,5 @@
+This project should not contain `windows-sys@0.61+`.
+
+dependencies that required `windows-sys@0.61`+:
+ - tokio: 1.48+ (locked to 1.47.2)
+ - mio: 1.1+ (locked to 1.0.4)
