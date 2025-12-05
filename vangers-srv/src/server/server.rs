@@ -180,58 +180,59 @@ impl Server {
             }
         });
 
-        let sleep_duration = Duration::from_millis(10);
         loop {
-            // match event_rx_shell.try_recv() {
-            //     Ok(ShellCmd)
-            // };
-
-            match event_rx.try_recv() {
-                Ok(Event::Add(client)) => {
-                    self.clients.push(client);
-                    continue;
-                }
-                Ok(Event::Halt) => {
-                    return Ok(());
-                }
-                // Ok(Event::ShellCmd(cmd)) => self.do_shell(cmd),
-                _ => {}
-            };
-
-            if let Ok(data) = clients_rx.try_recv() {
-                match data {
-                    MpscData(id, Connection::Disconnected) => {
-                        self.close_socket(&Packet::new(Action::CLOSE_SOCKET, &[]), id)
-                            .ok();
-                        // if let Some(game) = self.get_mut_game_by_clientid(id) {
-                        //     game.players.retain(|p| p.client_id != id)
-                        // }
-                        self.clients.retain(|c| c.id != id);
-                        // if let Some(client) = self.clients.iter_mut().find(|c| c.id == id) {
-                        //     client.connection = Connection::Disconnected;
-                        // }
-                        // self.clients
-                        //     .retain(|c| c.connection != Connection::Disconnected);
-                    }
-                    MpscData(id, connection @ Connection::Authenticated(_))
-                    | MpscData(id, connection @ Connection::Connected) => {
-                        let client = self.clients.iter_mut().find(|c| c.id == id);
-                        if let Some(client) = client {
-                            client.connection = connection;
-                            if let Connection::Authenticated(protocol) = client.connection {
-                                client.protocol = protocol;
-                            }
+            ::tokio::select! {
+                event = event_rx.recv() => {
+                    match event {
+                        Some(Event::Add(client)) => {
+                            self.clients.push(client);
+                        }
+                        Some(Event::Halt) => {
+                            return Ok(());
+                        }
+                        // Ok(Event::ShellCmd(cmd)) => self.do_shell(cmd),
+                        None => {
+                            error!("unexpected event_rx channel closed");
+                            return Ok(());
                         }
                     }
-                    MpscData(id, Connection::Updated(p)) => {
-                        self.on_update(id, p);
+                }
+                data = clients_rx.recv() => {
+                    match data {
+                        Some(MpscData(id, Connection::Disconnected)) => {
+                            self.close_socket(&Packet::new(Action::CLOSE_SOCKET, &[]), id)
+                                .ok();
+                            // if let Some(game) = self.get_mut_game_by_clientid(id) {
+                            //     game.players.retain(|p| p.client_id != id)
+                            // }
+                            self.clients.retain(|c| c.id != id);
+                            // if let Some(client) = self.clients.iter_mut().find(|c| c.id == id) {
+                            //     client.connection = Connection::Disconnected;
+                            // }
+                            // self.clients
+                            //     .retain(|c| c.connection != Connection::Disconnected);
+                        }
+                        Some(MpscData(id, connection @ Connection::Authenticated(_))
+                        | MpscData(id, connection @ Connection::Connected)) => {
+                            let client = self.clients.iter_mut().find(|c| c.id == id);
+                            if let Some(client) = client {
+                                client.connection = connection;
+                                if let Connection::Authenticated(protocol) = client.connection {
+                                    client.protocol = protocol;
+                                }
+                            }
+                        }
+                        Some(MpscData(id, Connection::Updated(p))) => {
+                            self.on_update(id, p);
+                        }
+                        None => {
+                            error!("unexpected clients_rx channel closed");
+                            return Ok(());
+                        }
                     }
-                };
-
-                continue;
+                }
+                
             }
-
-            sleep(sleep_duration);
         }
     }
 }
