@@ -34,14 +34,15 @@ impl OnUpdate_RegisterName for Server {
         packet: &Packet,
         client_id: ClientID,
     ) -> Result<OnUpdateOk, OnUpdateError> {
-        let player = match self.games.get_mut_player_by_client_id(client_id) {
-            Some(player) => player,
-            None => return Err(RegisterNameError::PlayerNotFound(client_id).into()),
-        };
+        let player = self
+            .games
+            .get_mut_player_by_client_id(client_id)
+            .ok_or(RegisterNameError::PlayerNotFound(client_id))?;
 
-        if player.bind.is_none() {
-            Err(RegisterNameError::PlayerNotBind(client_id))?
-        }
+        let player_bind_id = player
+            .bind
+            .map(|bind| bind.id())
+            .ok_or(RegisterNameError::PlayerNotBind(client_id))?;
 
         let login = CStr::from_bytes_until_nul(&packet.data)
             .map_err(|_| RegisterNameError::NameOrPasswordParse)?;
@@ -49,14 +50,10 @@ impl OnUpdate_RegisterName for Server {
             .map_err(|_| RegisterNameError::NameOrPasswordParse)?;
 
         player.set_auth(login.to_bytes_with_nul(), pwd.to_bytes_with_nul());
-        info!(
-            "set name {:?} for player_id=`{}`",
-            login,
-            player.bind.unwrap().id()
-        );
+        info!("set name {:?} for player_id=`{}`", login, player_bind_id);
 
         let data = std::iter::empty()
-            .chain(&player.bind.unwrap().id().to_le_bytes())
+            .chain(&player_bind_id.to_le_bytes())
             .chain(login.to_bytes_with_nul())
             .copied()
             .collect::<Vec<_>>();
