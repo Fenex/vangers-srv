@@ -82,7 +82,7 @@ impl OnUpdate_CreateObject for Server {
                     if vanject.is_non_global() {
                         // world->process_create_inventory()
                         debug!(
-                            "Added inventory vanject {:?} to player {}",
+                            "Added vanject {:?} to inventory of player_id=`{}`",
                             &vanject.id.to_le_bytes(),
                             vanject.player_bind_id
                         );
