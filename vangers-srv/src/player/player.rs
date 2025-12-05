@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use ::log::info;
+use ::tracing::info;
 
 use crate::game::World;
 use crate::protocol::NetTransportReceive;
@@ -102,8 +102,10 @@ impl Player {
         match self.body {
             Some(ref body) => {
                 info!(
-                    "set body with color {} for player {}",
-                    body.color, self.client_id
+                    "set body with color `{}` for client_id=`{}`, player_id=`{:?}`",
+                    body.color,
+                    self.client_id,
+                    self.bind.map(|bind| bind.id())
                 );
                 Ok(())
             }

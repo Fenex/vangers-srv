@@ -28,6 +28,7 @@ pub(in crate::server) trait OnUpdate_CloseSocket {
 }
 
 impl OnUpdate_CloseSocket for Server {
+    #[tracing::instrument(skip_all)]
     fn close_socket(
         &mut self,
         packet: &Packet,

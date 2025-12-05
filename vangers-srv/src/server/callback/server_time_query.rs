@@ -14,6 +14,7 @@ pub(super) trait OnUpdate_ServerTimeQuery {
 }
 
 impl OnUpdate_ServerTimeQuery for Server {
+    #[tracing::instrument(skip_all)]
     fn server_time_query(
         &mut self,
         packet: &Packet,

@@ -1,15 +1,15 @@
 use std::thread::sleep;
 use std::time::Duration;
 
-use ::log::{error, info};
 use ::tokio::net::TcpListener;
 use ::tokio::sync::mpsc;
+use ::tracing::{error, info};
 
 use crate::client::{Client, ClientID, Connection, MpscData};
 use crate::game::Game;
-use crate::protocol::*;
 use crate::server::callback::*;
 use crate::utils::Uptime;
+use crate::{protocol::*, ServerConfig};
 
 use super::games::Games;
 
@@ -20,8 +20,7 @@ enum Event {
 }
 
 pub struct Server {
-    /// The port that is listening for attempting new TCP connections.
-    port: u16,
+    pub(in crate::server) conf: ServerConfig,
     /// List of all games on the server.
     pub(in crate::server) games: Games,
     /// Counter that storages an uniq game_id for next new game.
@@ -35,9 +34,9 @@ pub struct Server {
 }
 
 impl Server {
-    pub fn new(port: u16) -> Self {
+    pub fn new(conf: ServerConfig) -> Self {
         Self {
-            port,
+            conf,
             games: Games::new(),
             games_id_uniq: 0,
             clients: vec![],
@@ -123,10 +122,11 @@ impl Server {
         let game = match self.get_game_by_clientid(client_id) {
             Some(game) => game,
             None => {
-                panic!(
-                    "Player with client_id={} not found on the server",
+                error!(
+                    "cannot doing notify: player with client_id=`{}` not found on the server",
                     client_id
                 );
+                return;
             }
         };
 
@@ -162,7 +162,7 @@ impl Server {
         let (client_tx, mut clients_rx) = mpsc::channel(50);
         let (event_tx, mut event_rx) = mpsc::channel::<Event>(10);
 
-        let endpoint = format!("0.0.0.0:{}", self.port);
+        let endpoint = format!("0.0.0.0:{}", self.conf.port);
         println!("Server is listening on: {}", endpoint);
         let listener = TcpListener::bind(endpoint).await?;
 

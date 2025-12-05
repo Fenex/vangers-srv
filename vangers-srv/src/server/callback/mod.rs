@@ -30,11 +30,11 @@ use set_world::*;
 use total_players_data_query::*;
 use update_object::*;
 
-use ::log::{debug, error, info, trace, warn};
+use ::tracing::{debug, error, info, trace, warn};
 
 use crate::client::ClientID;
 use crate::protocol::{Action, Packet};
-use crate::Server;
+use crate::{Server, ServerConfig};
 
 #[derive(Debug, ::thiserror::Error)]
 pub enum OnUpdateError {
@@ -98,8 +98,17 @@ pub(super) trait OnUpdate {
 }
 
 impl OnUpdate for Server {
+    #[tracing::instrument(
+        skip_all,
+        fields(
+            p.action = packet.action.to_string(),
+            p.event_size = packet.event_size,
+            p.real_data_size = packet.data.len(),
+            client_id = client_id,
+        )
+    )]
     fn on_update(&mut self, client_id: ClientID, packet: Packet) {
-        view("[<-]", &packet);
+        view("[<-]", &packet, &self.conf);
 
         let result = match packet.action {
             Action::ATTACH_TO_GAME => self.attach_to_game(&packet, client_id),
@@ -123,20 +132,20 @@ impl OnUpdate for Server {
         match result {
             Ok(OnUpdateOk::Response(p)) => {
                 if let Some(client) = self.clients.iter_mut().find(|c| c.id == client_id) {
-                    view("[->]", &packet);
+                    view("[->]", &packet, &self.conf);
                     client.send(&p);
                 } else {
                     warn!("Error: can't send response to client with id={}", client_id);
                 }
             }
             Ok(OnUpdateOk::Broadcast(p)) => {
-                view("[=>]", &packet);
+                view("[=>]", &packet, &self.conf);
                 self.notify_all(client_id, &p);
             }
             Ok(OnUpdateOk::Complete) => {
                 match &packet.action {
                     Action::CREATE_OBJECT | Action::UPDATE_OBJECT | Action::DELETE_OBJECT => {}
-                    _ => view("[ok]", &packet),
+                    _ => view("[ok]", &packet, &self.conf),
                 };
             }
             Err(err) => error!("{}", err),
@@ -144,7 +153,7 @@ impl OnUpdate for Server {
     }
 }
 
-fn view(prefix: &str, p: &Packet) {
+fn view(prefix: &str, p: &Packet, conf: &ServerConfig) {
     use Action::*;
 
     match &p.action {
@@ -152,12 +161,18 @@ fn view(prefix: &str, p: &Packet) {
             trace!("{} {:?}: {:X?}", prefix, a, &p.data);
         }
         a @ (SERVER_TIME | SERVER_TIME_QUERY | SERVER_TIME_RESPONSE) => {
-            trace!("{} {:?}: {:X?}", prefix, a, &p.data);
+            if !conf.supress_log_server_time {
+                trace!("{} {:?}: {:X?}", prefix, a, &p.data);
+            }
         }
-        a @ GAMES_LIST_QUERY => debug!("{} {:?}", prefix, a),
+        a @ GAMES_LIST_QUERY => {
+            if !conf.supress_log_games_list_query {
+                debug!("{} {:?}", prefix, a)
+            }
+        }
         a => {
-            debug!("{} {:?}: {:?}", prefix, a, &p.data);
             info!("{} {:?}", prefix, a);
+            debug!("{} {:?}: {:?}", prefix, a, &p.data);
         }
     }
 }

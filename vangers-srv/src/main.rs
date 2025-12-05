@@ -1,6 +1,7 @@
 extern crate num_traits;
 
 use ::clap::Parser;
+use ::tracing_subscriber::EnvFilter;
 
 mod client;
 mod game;
@@ -14,16 +15,20 @@ mod vanject;
 use crate::server::Server;
 // use crate::shell::*;
 
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Default)]
 #[clap(name = "Vangers Server", version, author)]
-struct Opts {
+struct ServerConfig {
     #[clap(
         short,
         long,
         default_value = "2197",
         help = "Server port to listening incoming in-game player connections"
     )]
-    port: u16,
+    pub port: u16,
+    #[clap(long, help = "Supress log messages for all SERVER_TIME_* events")]
+    pub supress_log_server_time: bool,
+    #[clap(long, help = "Supress log messages for all GAMES_LIST_QUERY events")]
+    pub supress_log_games_list_query: bool,
     // #[clap(short, long, help = "Accept incoming connections from localhost only")]
     // localhost: bool,
 
@@ -33,8 +38,11 @@ struct Opts {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ::env_logger::init();
-    let opts: Opts = Opts::parse();
+    ::tracing_subscriber::fmt()
+        .with_env_filter(EnvFilter::from_default_env())
+        .init();
+
+    let conf: ServerConfig = ServerConfig::parse();
 
     // let shell = ShellCmd::parse_from(vec!["", "tdest"]);
 
@@ -57,7 +65,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // println!("is localhost only: {:?}", opts.localhost);
 
-    let mut srv = Server::new(opts.port);
+    let mut srv = Server::new(conf);
     // if opts.shell {
     // srv.enable_shell();
     // }

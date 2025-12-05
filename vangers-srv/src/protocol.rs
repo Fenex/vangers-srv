@@ -1,8 +1,8 @@
 use std::convert::TryFrom;
 
 use ::enum_primitive_derive::Primitive;
-use ::log::warn;
 use ::num_traits::{FromPrimitive, ToPrimitive};
+use ::tracing::warn;
 
 // Event's flags
 // pub const AUXILIARY_EVENT: u8 = 0x80;
@@ -20,7 +20,8 @@ pub trait NetTransport: NetTransportSend + NetTransportReceive {}
 impl<T> NetTransport for T where T: NetTransportSend + NetTransportReceive {}
 
 #[allow(non_camel_case_types)]
-#[derive(Copy, Clone, Primitive, Eq, PartialEq, Debug)]
+#[non_exhaustive]
+#[derive(Copy, Clone, Primitive, Eq, PartialEq, Debug, ::strum::Display)]
 pub enum Action {
     UNKNOWN = 0x00,
 

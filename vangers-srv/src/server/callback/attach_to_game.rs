@@ -1,4 +1,4 @@
-use ::log::info;
+use ::tracing::info;
 
 use crate::client::ClientID;
 use crate::player::Player;
@@ -28,6 +28,7 @@ pub(super) trait OnUpdate_AttachToGame {
 }
 
 impl OnUpdate_AttachToGame for Server {
+    #[tracing::instrument(skip_all)]
     fn attach_to_game(
         &mut self,
         packet: &Packet,
@@ -56,7 +57,7 @@ impl OnUpdate_AttachToGame for Server {
             Some(p_id) => p_id,
         };
 
-        info!("=======!= ATTACHED PLAYER ID: {} =!=======", player_id);
+        info!("attached player_id=`{player_id}` to game_id=`{gmid}`");
 
         let data = {
             // vanject ID offsets.
@@ -100,8 +101,6 @@ impl OnUpdate_AttachToGame for Server {
             .map(|(_, v)| v.to_vangers_byte())
             .map(|v| Packet::new(Action::UPDATE_OBJECT, &v[..]))
             .collect::<Vec<_>>();
-
-        // dbg!("ATTACH_TO_GAME", player_id, &game);
 
         if let Some(packet) = packet.create_answer(data) {
             self.notify_player(client_id, &packet);

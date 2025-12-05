@@ -1,4 +1,4 @@
-use ::log::{debug, warn};
+use ::tracing::{debug, warn};
 
 use crate::client::ClientID;
 use crate::protocol::{Action, NetTransportSend, Packet};
@@ -27,6 +27,7 @@ pub(super) trait OnUpdate_CreateObject {
 }
 
 impl OnUpdate_CreateObject for Server {
+    #[tracing::instrument(skip_all)]
     fn create_object(
         &mut self,
         packet: &Packet,

@@ -1,6 +1,9 @@
+use std::ffi::CStr;
+
+use ::tracing::info;
+
 use crate::client::ClientID;
 use crate::protocol::Packet;
-use crate::utils::get_first_cstr;
 use crate::Server;
 
 use super::{OnUpdateError, OnUpdateOk};
@@ -25,6 +28,7 @@ pub(super) trait OnUpdate_RegisterName {
 }
 
 impl OnUpdate_RegisterName for Server {
+    #[tracing::instrument(skip_all)]
     fn register_name(
         &mut self,
         packet: &Packet,
@@ -35,34 +39,25 @@ impl OnUpdate_RegisterName for Server {
             None => return Err(RegisterNameError::PlayerNotFound(client_id).into()),
         };
 
-        let auth = get_first_cstr(&packet.data).and_then(|name| {
-            // TODO: fix fail if password is empty
-            if !name.is_empty() {
-                if let Some(pwd) = get_first_cstr(&packet.data[name.len()..]) {
-                    // if pwd.len() > 0 {
-                    return Some((name, pwd));
-                // }
-                } else {
-                    return Some((name, &[0x80, 0x80, 0x00]));
-                }
-            }
-            None
-        });
-
-        match auth {
-            Some((name, pwd)) => player.set_auth(name, pwd),
-            None => return Err(RegisterNameError::NameOrPasswordParse.into()),
-        }
-
         if player.bind.is_none() {
-            return Err(RegisterNameError::PlayerNotBind(client_id).into());
+            Err(RegisterNameError::PlayerNotBind(client_id))?
         }
 
-        assert!(!auth.unwrap().0.is_empty());
+        let login = CStr::from_bytes_until_nul(&packet.data)
+            .map_err(|_| RegisterNameError::NameOrPasswordParse)?;
+        let pwd = CStr::from_bytes_until_nul(&packet.data[login.count_bytes() + 1..])
+            .map_err(|_| RegisterNameError::NameOrPasswordParse)?;
+
+        player.set_auth(login.to_bytes_with_nul(), pwd.to_bytes_with_nul());
+        info!(
+            "set name {:?} for player_id=`{}`",
+            login,
+            player.bind.unwrap().id()
+        );
 
         let data = std::iter::empty()
             .chain(&player.bind.unwrap().id().to_le_bytes())
-            .chain(auth.unwrap().0)
+            .chain(login.to_bytes_with_nul())
             .copied()
             .collect::<Vec<_>>();
 

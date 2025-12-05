@@ -29,6 +29,7 @@ pub(super) trait OnUpdate_SetGameData {
 }
 
 impl OnUpdate_SetGameData for Server {
+    #[tracing::instrument(skip_all)]
     fn set_game_data(
         &mut self,
         packet: &Packet,

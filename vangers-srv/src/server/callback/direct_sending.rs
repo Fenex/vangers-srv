@@ -1,6 +1,8 @@
 use std::borrow::Cow;
 use std::io::Write;
 
+use tracing::warn;
+
 use crate::client::ClientID;
 use crate::protocol::Packet;
 use crate::utils;
@@ -28,6 +30,7 @@ pub(super) trait OnUpdate_DirectSending {
 }
 
 impl OnUpdate_DirectSending for Server {
+    #[tracing::instrument(skip_all)]
     fn direct_sending(
         &mut self,
         packet: &Packet,
@@ -66,6 +69,7 @@ impl OnUpdate_DirectSending for Server {
         // TODO: take out to config this constant
         const LIMIT_MSG_LEN: usize = 140;
         if msg.len() > LIMIT_MSG_LEN {
+            warn!("direct message length is too big, max length: `{}`, given length: `{}`, the message will be cut", LIMIT_MSG_LEN, msg.len());
             msg = Cow::Owned({
                 let mut buffer = Vec::with_capacity(LIMIT_MSG_LEN);
                 buffer.write(&msg[0..LIMIT_MSG_LEN - 3 - 1]).ok();

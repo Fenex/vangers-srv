@@ -1,11 +1,10 @@
 use std::ffi::CString;
 
+use super::{OnUpdateError, OnUpdateOk};
 use crate::client::ClientID;
 use crate::game::Type as GameType;
 use crate::protocol::Packet;
 use crate::Server;
-
-use super::{OnUpdateError, OnUpdateOk};
 
 #[allow(non_camel_case_types)]
 pub(super) trait OnUpdate_GamesListQuery {
@@ -17,6 +16,7 @@ pub(super) trait OnUpdate_GamesListQuery {
 }
 
 impl OnUpdate_GamesListQuery for Server {
+    #[tracing::instrument(skip_all)]
     fn games_list_query(
         &mut self,
         packet: &Packet,
@@ -84,14 +84,13 @@ mod test {
 
     trait MockServer {
         fn create_without_games() -> Server {
-            let srv = Server::new(1223);
-            srv
+            Server::new(Default::default())
         }
 
         /// Returns Server with one (U)nconfigured (G)ame:
         #[allow(non_snake_case)]
         fn create_UG() -> Server {
-            let mut srv = Server::new(1223);
+            let mut srv = Server::new(Default::default());
             let mut game = Game::new(1);
             game.attach_player(Player::new(11));
             srv.games.insert(1, game);
@@ -101,7 +100,7 @@ mod test {
         /// Returns Server with one (C)onfigured (G)ames and one player:
         #[allow(non_snake_case)]
         fn create_CG_P1() -> Server {
-            let mut srv = Server::new(1223);
+            let mut srv = Server::new(Default::default());
 
             let mut game = Game::new(1);
             game.config = Some(Config::new(GameType::PASSEMBLOSS));
@@ -120,7 +119,7 @@ mod test {
         ///  - (C)onfigured (G)ame with two players
         #[allow(non_snake_case)]
         fn create_UG_P1_CG_P2() -> Server {
-            let mut srv = Server::new(1223);
+            let mut srv = Server::new(Default::default());
 
             {
                 let mut game = Game::new(1);

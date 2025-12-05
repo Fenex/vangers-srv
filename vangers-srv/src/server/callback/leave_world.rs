@@ -28,6 +28,7 @@ pub(super) trait OnUpdate_LeaveWorld {
 }
 
 impl OnUpdate_LeaveWorld for Server {
+    #[tracing::instrument(skip_all)]
     fn leave_world(
         &mut self,
         _: &Packet,

@@ -1,4 +1,4 @@
-use ::log::warn;
+use ::tracing::warn;
 
 use crate::client::ClientID;
 use crate::protocol::{NetTransportSend, Packet};
@@ -22,6 +22,7 @@ pub(super) trait OnUpdate_TotalPlayersDataQuery {
 }
 
 impl OnUpdate_TotalPlayersDataQuery for Server {
+    #[tracing::instrument(skip_all)]
     fn total_players_data_query(
         &mut self,
         packet: &Packet,

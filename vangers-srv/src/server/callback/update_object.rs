@@ -29,6 +29,7 @@ pub(super) trait OnUpdate_UpdateObject {
 }
 
 impl OnUpdate_UpdateObject for Server {
+    #[tracing::instrument(skip_all)]
     fn update_object(
         &mut self,
         packet: &Packet,

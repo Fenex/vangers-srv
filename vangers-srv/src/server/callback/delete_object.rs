@@ -1,4 +1,4 @@
-use ::log::debug;
+use ::tracing::debug;
 
 use crate::client::ClientID;
 use crate::protocol::{Action, Packet};
@@ -27,6 +27,7 @@ pub(super) trait OnUpdate_DeleteObject {
 }
 
 impl OnUpdate_DeleteObject for Server {
+    #[tracing::instrument(skip_all)]
     fn delete_object(
         &mut self,
         packet: &Packet,

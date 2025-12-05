@@ -1,11 +1,9 @@
 use std::convert::TryFrom;
 
-use ::log::{error, info, warn};
 use ::tokio::io::{AsyncReadExt, AsyncWriteExt};
 use ::tokio::net::TcpStream;
 use ::tokio::sync::mpsc::{self, Receiver};
-
-use crate::num_traits::FromPrimitive;
+use ::tracing::{error, info, warn};
 
 use super::protocol::*;
 
@@ -90,23 +88,18 @@ impl Client {
 
             ::tokio::spawn(async move {
                 while let Some(data) = rx_server.recv().await {
-                    let event_id = data[2];
-                    let q = Action::from_u8(event_id);
-                    if q != Some(Action::SERVER_TIME) {
-                        // dbg!(("send", id, q.unwrap(), &data[..]));
-                    }
-                    if sw.write(&data).await.is_err() {
-                        warn!("error sending data to client");
+                    if let Err(err) = sw.write(&data).await {
+                        error!("client::event_loop: error sending data to client: {err:?}");
                         break;
                     }
                 }
             });
 
-            let mut buff = [0u8; 32767]; // i16::MAX
+            let mut buff = [0u8; i16::MAX as usize];
             let mut buff_offset: usize = 0;
             loop {
                 match sr.read(&mut buff[buff_offset..]).await {
-                    Ok(_n @ 0) => {
+                    Ok(0) => {
                         info!("Connection closed by client");
                         tx_server
                             .send(MpscData(id, Connection::Disconnected))
@@ -170,8 +163,8 @@ impl Client {
 
                         buff_offset = buff_readable_size - offset;
                     }
-                    _ => {
-                        warn!("Connection closed (I/O ERROR)");
+                    Err(err) => {
+                        error!("Connection closed (I/O ERROR): {err:?}");
                         tx_server
                             .send(MpscData(id, Connection::Disconnected))
                             .await

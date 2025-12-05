@@ -25,6 +25,7 @@ pub(super) trait OnUpdate_SetPlayerData {
 }
 
 impl OnUpdate_SetPlayerData for Server {
+    #[tracing::instrument(skip_all)]
     fn set_player_data(
         &mut self,
         packet: &Packet,

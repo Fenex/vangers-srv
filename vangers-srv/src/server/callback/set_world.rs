@@ -33,6 +33,7 @@ pub(super) trait OnUpdate_SetWorld {
 }
 
 impl OnUpdate_SetWorld for Server {
+    #[tracing::instrument(skip_all)]
     fn set_world(
         &mut self,
         packet: &Packet,
