@@ -1,0 +1,13 @@
+services:
+  vangers-srv:
+    restart: unless-stopped
+    container_name: vangers-srv
+    image: vangers-srv
+    pull_policy: never
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${VANGERS_PORT:-2197}:${VANGERS_PORT:-2197}"
+    env_file:
+      - .env

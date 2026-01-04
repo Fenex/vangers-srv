@@ -1,2 +1,5 @@
 target/**
 .vscode/**
+docker-compose.override.y*ml
+compose.override.y*ml
+.env
