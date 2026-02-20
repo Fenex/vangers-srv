@@ -100,6 +100,24 @@ fn extract_auth_data<'a>(data: &'a [u8]) -> Result<(Cow<'a, CStr>, &'a CStr), Re
         .into();
     }
 
+    // filter non-printable ascii
+    if name.to_bytes().iter().any(|&c| c < 32 || c == 127) {
+        name = CString::from_vec_with_nul(
+            name.to_bytes_with_nul()
+                .iter()
+                .map(|&c| {
+                    if c == 127 || c > 0 && c < 32 {
+                        42 // asterisk
+                    } else {
+                        c
+                    }
+                })
+                .collect::<Vec<_>>(),
+        )
+        .expect("the `name` contains *exactly* one null-terminator that we appends manually")
+        .into();
+    }
+
     Ok((name, pwd))
 }
 
