@@ -183,6 +183,7 @@ pub struct Vanject {
     pub player_bind_id: u8,
     pub time: i32,
     pub pos: Pos<i16>,
+    #[allow(dead_code)]
     pub radius: i16,
     pub body: Vec<u8>,
 }
@@ -461,10 +462,10 @@ mod test {
             assert!(
                 Vanject::create_from_slice(&[1, 0, 9, 4, 6, 0, 0, 0, 10, 0, 20, 0, 15, 0]).is_err()
             );
-            assert!(Vanject::create_from_slice(&[
-                1, 0, 9, 4, 6, 0, 0, 0, 10, 0, 20, 0, 15, 0, 111
-            ])
-            .is_ok());
+            assert!(
+                Vanject::create_from_slice(&[1, 0, 9, 4, 6, 0, 0, 0, 10, 0, 20, 0, 15, 0, 111])
+                    .is_ok()
+            );
         }
 
         #[test]
@@ -606,22 +607,25 @@ mod test {
             check(&v);
             assert!(v.update_from_slice(&[2, 0, 9, 4]).is_err());
             check(&v);
-            assert!(v
-                .update_from_slice(&[2, 0, 9, 4, 6, 0, 0, 0, 10, 0, 20, 0])
-                .is_err());
+            assert!(
+                v.update_from_slice(&[2, 0, 9, 4, 6, 0, 0, 0, 10, 0, 20, 0])
+                    .is_err()
+            );
             check(&v);
 
-            assert!(v
-                .update_from_slice(&[2, 0, 9, 4, 7, 0, 0, 0, 11, 0, 21, 0, 8u8])
-                .is_ok());
+            assert!(
+                v.update_from_slice(&[2, 0, 9, 4, 7, 0, 0, 0, 11, 0, 21, 0, 8u8])
+                    .is_ok()
+            );
             assert_eq!(7, v.time);
             assert_eq!(Pos { x: 11, y: 21 }, v.pos);
             assert_eq!(radius, v.radius);
             assert_eq!(&[0u8][1..], &v.body[..]);
 
-            assert!(v
-                .update_from_slice(&[2, 0, 9, 4, 9, 0, 0, 0, 12, 0, 22, 0, 8u8, 110, 111])
-                .is_ok());
+            assert!(
+                v.update_from_slice(&[2, 0, 9, 4, 9, 0, 0, 0, 12, 0, 22, 0, 8u8, 110, 111])
+                    .is_ok()
+            );
             assert_eq!(9, v.time);
             assert_eq!(Pos { x: 12, y: 22 }, v.pos);
             assert_eq!(radius, v.radius);
@@ -681,22 +685,25 @@ mod test {
             check(&v);
             assert!(v.update_from_slice(&[2, 1, 1, 1]).is_err());
             check(&v);
-            assert!(v
-                .update_from_slice(&[2, 1, 1, 1, 6, 0, 0, 0, 10, 0, 20])
-                .is_err());
+            assert!(
+                v.update_from_slice(&[2, 1, 1, 1, 6, 0, 0, 0, 10, 0, 20])
+                    .is_err()
+            );
             check(&v);
 
-            assert!(v
-                .update_from_slice(&[2, 1, 1, 1, 9, 0, 0, 0, 11, 0, 21, 0])
-                .is_ok());
+            assert!(
+                v.update_from_slice(&[2, 1, 1, 1, 9, 0, 0, 0, 11, 0, 21, 0])
+                    .is_ok()
+            );
             assert_eq!(9, v.time);
             assert_eq!(Pos { x: 11, y: 21 }, v.pos);
             assert_eq!(radius, v.radius);
             assert_eq!(&[0u8][1..], &v.body[..]);
 
-            assert!(v
-                .update_from_slice(&[2, 1, 1, 1, 11, 0, 0, 0, 12, 0, 22, 0, 111])
-                .is_ok());
+            assert!(
+                v.update_from_slice(&[2, 1, 1, 1, 11, 0, 0, 0, 12, 0, 22, 0, 111])
+                    .is_ok()
+            );
             assert_eq!(11, v.time);
             assert_eq!(Pos { x: 12, y: 22 }, v.pos);
             assert_eq!(radius, v.radius);
@@ -723,9 +730,10 @@ mod test {
                 assert_eq!(body, v.body);
             };
 
-            assert!(v
-                .update_from_slice(&[5, 5, 5, 5, 1, 0, 0, 0, 10, 0, 15, 0, 1, 1, 1, 1, 1, 1])
-                .is_err(),);
+            assert!(
+                v.update_from_slice(&[5, 5, 5, 5, 1, 0, 0, 0, 10, 0, 15, 0, 1, 1, 1, 1, 1, 1])
+                    .is_err(),
+            );
 
             check(&v);
         }

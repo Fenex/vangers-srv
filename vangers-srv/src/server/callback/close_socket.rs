@@ -1,10 +1,10 @@
 use crate::player::Status as PlayerStatus;
 use crate::protocol::{Action, Packet};
 // use crate::vanject::{VanjectError};
-use crate::client::ClientID;
 use crate::Server;
+use crate::client::ClientID;
 
-use super::{OnUpdateError, OnUpdateOk, OnUpdate_LeaveWorld};
+use super::{OnUpdate_LeaveWorld, OnUpdateError, OnUpdateOk};
 
 #[derive(Debug, ::thiserror::Error)]
 pub enum CloseSocketError {

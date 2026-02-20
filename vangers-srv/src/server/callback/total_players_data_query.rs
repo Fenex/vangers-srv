@@ -1,8 +1,8 @@
 use ::tracing::warn;
 
+use crate::Server;
 use crate::client::ClientID;
 use crate::protocol::{NetTransportSend, Packet};
-use crate::Server;
 
 use super::{OnUpdateError, OnUpdateOk};
 
@@ -56,7 +56,10 @@ impl OnUpdate_TotalPlayersDataQuery for Server {
             let body = match player.body {
                 Some(ref body) => body.to_vangers_byte(),
                 None => {
-                    warn!("Player with (bind_id={} client_id={}) has no `body` property, ignored the player", id, player.client_id);
+                    warn!(
+                        "Player with (bind_id={} client_id={}) has no `body` property, ignored the player",
+                        id, player.client_id
+                    );
                     continue;
                 }
             };

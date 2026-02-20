@@ -1,9 +1,9 @@
 use ::tracing::{debug, warn};
 
+use crate::Server;
 use crate::client::ClientID;
 use crate::protocol::{Action, NetTransportSend, Packet};
 use crate::vanject::*;
-use crate::Server;
 
 use super::{OnUpdateError, OnUpdateOk};
 

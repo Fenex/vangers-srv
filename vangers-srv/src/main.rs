@@ -26,9 +26,17 @@ struct ServerConfig {
         help = "Server port to listening incoming in-game player connections"
     )]
     pub port: u16,
-    #[clap(long, env = "VANGERS_SUPRESS_LOG_SERVER_TIME", help = "Supress log messages for all SERVER_TIME_* events")]
+    #[clap(
+        long,
+        env = "VANGERS_SUPRESS_LOG_SERVER_TIME",
+        help = "Supress log messages for all SERVER_TIME_* events"
+    )]
     pub supress_log_server_time: bool,
-    #[clap(long, env = "VANGERS_SUPRESS_LOG_GAMES_LIST_QUERY", help = "Supress log messages for all GAMES_LIST_QUERY events")]
+    #[clap(
+        long,
+        env = "VANGERS_SUPRESS_LOG_GAMES_LIST_QUERY",
+        help = "Supress log messages for all GAMES_LIST_QUERY events"
+    )]
     pub supress_log_games_list_query: bool,
     // #[clap(short, long, help = "Accept incoming connections from localhost only")]
     // localhost: bool,

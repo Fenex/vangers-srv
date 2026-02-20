@@ -2,9 +2,9 @@ use std::ffi::CStr;
 
 use ::tracing::info;
 
+use crate::Server;
 use crate::client::ClientID;
 use crate::protocol::Packet;
-use crate::Server;
 
 use super::{OnUpdateError, OnUpdateOk};
 

@@ -1,6 +1,3 @@
-use std::thread::sleep;
-use std::time::Duration;
-
 use ::tokio::net::TcpListener;
 use ::tokio::sync::mpsc;
 use ::tracing::{error, info};
@@ -9,7 +6,7 @@ use crate::client::{Client, ClientID, Connection, MpscData};
 use crate::game::Game;
 use crate::server::callback::*;
 use crate::utils::Uptime;
-use crate::{protocol::*, ServerConfig};
+use crate::{ServerConfig, protocol::*};
 
 use super::games::Games;
 
@@ -231,7 +228,7 @@ impl Server {
                         }
                     }
                 }
-                
+
             }
         }
     }

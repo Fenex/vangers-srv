@@ -1,8 +1,8 @@
 use std::{cell::BorrowError, collections::HashMap};
 
+use crate::Server;
 use crate::client::ClientID;
 use crate::protocol::{Action, Packet};
-use crate::Server;
 
 use super::{OnUpdateError, OnUpdateOk};
 

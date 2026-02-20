@@ -1,6 +1,6 @@
+use crate::Server;
 use crate::client::ClientID;
 use crate::protocol::{NetTransportSend, Packet};
-use crate::Server;
 
 use super::{OnUpdateError, OnUpdateOk};
 

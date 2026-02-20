@@ -1,13 +1,13 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use crate::Server;
 use crate::client::ClientID;
 use crate::game::World;
 use crate::player::Status as PlayerStatus;
 use crate::protocol::{Action, Packet};
 use crate::utils::slice_le_to_i16;
 use crate::vanject::NID;
-use crate::Server;
 
 use super::{OnUpdateError, OnUpdateOk};
 

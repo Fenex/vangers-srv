@@ -14,7 +14,7 @@ pub fn get_first_cstr(bytes: &[u8]) -> Option<&[u8]> {
     bytes
         .iter()
         .enumerate()
-        .find(|(_, &v)| v == 0)
+        .find(|(_, v)| **v == 0)
         .map(|(i, _)| &bytes[0..=i])
 }
 

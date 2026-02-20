@@ -16,6 +16,7 @@ pub trait NetTransportReceive: Sized {
     fn from_slice(slice: &[u8]) -> Option<Self>;
 }
 
+#[allow(dead_code)]
 pub trait NetTransport: NetTransportSend + NetTransportReceive {}
 impl<T> NetTransport for T where T: NetTransportSend + NetTransportReceive {}
 

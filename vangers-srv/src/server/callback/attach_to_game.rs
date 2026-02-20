@@ -1,10 +1,10 @@
 use ::tracing::info;
 
+use crate::Server;
 use crate::client::ClientID;
 use crate::player::Player;
 use crate::protocol::*;
 use crate::utils::slice_le_to_i32;
-use crate::Server;
 
 use super::{OnUpdateError, OnUpdateOk};
 

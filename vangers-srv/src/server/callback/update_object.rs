@@ -1,6 +1,6 @@
-use crate::protocol::{Action, NetTransportSend, Packet};
-use crate::vanject::{VanjectError, NID};
 use crate::Server;
+use crate::protocol::{Action, NetTransportSend, Packet};
+use crate::vanject::{NID, VanjectError};
 use crate::{client::ClientID, utils::slice_le_to_i32};
 
 use super::{OnUpdateError, OnUpdateOk};

@@ -5,8 +5,8 @@ use ::num_traits::FromPrimitive;
 use crate::protocol::{NetTransportReceive, NetTransportSend};
 use crate::utils::slice_le_to_i32;
 
-use super::prm::*;
 use super::Type;
+use super::prm::*;
 
 #[derive(Debug)]
 pub enum GameMode {

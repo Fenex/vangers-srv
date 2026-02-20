@@ -155,7 +155,9 @@ impl Client {
                                 .await
                                 .is_err()
                             {
-                                panic!("Error: Can't send `Connection::Updated` event to server receiver");
+                                panic!(
+                                    "Error: Can't send `Connection::Updated` event to server receiver"
+                                );
                             }
 
                             offset += packet_size;
