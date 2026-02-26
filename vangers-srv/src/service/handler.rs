@@ -245,8 +245,14 @@ async fn handle_attach_to_game(
         });
     }
 
-    let protocol = state.clients_protocol.read().await;
-    if protocol.get(&client_id).copied().unwrap_or(1) > 1 {
+    let protocol = state
+        .clients
+        .read()
+        .await
+        .get(&client_id)
+        .map(|c| c.protocol)
+        .unwrap_or(1);
+    if protocol > 1 {
         let unix = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()

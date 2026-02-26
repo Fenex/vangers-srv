@@ -1,6 +1,7 @@
 //! Shared server state for Tower-based connection handling.
 //! Used by `VangersHandler` and per-connection tasks.
 
+use std::net::SocketAddr;
 use std::sync::atomic::{AtomicU32, Ordering};
 
 use ::tokio::sync::{RwLock, mpsc};
@@ -11,18 +12,22 @@ use crate::protocol::Packet;
 use super::games::Games;
 use crate::utils::Uptime;
 
-/// Registry of connected clients: maps client ID to the channel used to send packets to that client.
-pub type ClientRegistry = std::collections::HashMap<ClientID, mpsc::Sender<Packet>>;
+/// Подключённый клиент: адрес, версия протокола и канал для отправки пакетов.
+#[derive(Debug)]
+pub struct VangerClient {
+    pub id: ClientID,
+    pub ip: SocketAddr,
+    pub protocol: u8,
+    pub(crate) tx: mpsc::Sender<Packet>,
+}
 
-/// Protocol version per client (set after handshake in per-connection task).
-pub type ClientProtocolMap = std::collections::HashMap<ClientID, u8>;
+/// Реестр подключённых клиентов.
+pub type ClientRegistry = std::collections::HashMap<ClientID, VangerClient>;
 
 /// Shared state accessible from all connection tasks and the handler service.
 pub struct SharedState {
     pub games: RwLock<Games>,
     pub clients: RwLock<ClientRegistry>,
-    /// Protocol version (1 or 2) per client; used e.g. to send Z_TIME_RESPONSE only for protocol > 1.
-    pub clients_protocol: RwLock<ClientProtocolMap>,
     pub uptime: Uptime,
     games_id_counter: AtomicU32,
 }
@@ -32,7 +37,6 @@ impl SharedState {
         Self {
             games: RwLock::new(Games::new()),
             clients: RwLock::new(ClientRegistry::new()),
-            clients_protocol: RwLock::new(ClientProtocolMap::new()),
             uptime: Uptime::new(),
             games_id_counter: AtomicU32::new(1),
         }

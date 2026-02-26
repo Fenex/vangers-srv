@@ -3,4 +3,4 @@ mod server;
 mod state;
 
 pub use server::*;
-pub use state::{ClientRegistry, SharedState};
+pub use state::{ClientRegistry, SharedState, VangerClient};

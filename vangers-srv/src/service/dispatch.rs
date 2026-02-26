@@ -48,8 +48,8 @@ pub async fn dispatch_responses(
     let clients = state.clients.read().await;
     for (action, ids) in actions.into_iter().zip(targets) {
         for id in ids {
-            if let Some(tx) = clients.get(&id) {
-                let _ = tx.send(action.packet.clone()).await;
+            if let Some(client) = clients.get(&id) {
+                let _ = client.tx.send(action.packet.clone()).await;
             }
         }
     }

@@ -12,7 +12,7 @@ use crate::ServerConfig;
 use crate::client_id::ClientID;
 use crate::codec::VangersCodec;
 use crate::protocol::Packet;
-use crate::server::SharedState;
+use crate::server::{SharedState, VangerClient};
 use crate::service::{LoggingLayer, VangersHandler, dispatch_responses, handle_disconnect};
 use crate::transport::perform_handshake;
 
@@ -45,7 +45,7 @@ impl Server {
             info!("new client from {}", addr);
             let state = Arc::clone(&self.state);
             tokio::spawn(async move {
-                if let Err(e) = serve_connection(state, stream).await {
+                if let Err(e) = serve_connection(state, stream, addr).await {
                     error!("connection error: {}", e);
                 }
             });
@@ -55,8 +55,10 @@ impl Server {
 
 async fn serve_connection(
     state: Arc<SharedState>,
-    mut stream: TcpStream,
+    stream: TcpStream,
+    addr: std::net::SocketAddr,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let mut stream = stream;
     let protocol = match perform_handshake(&mut stream).await {
         Ok(p) => p,
         Err(e) => {
@@ -71,12 +73,13 @@ async fn serve_connection(
     let client_id: ClientID = rand::random();
     let (tx, mut rx) = mpsc::channel::<Packet>(1000);
     {
-        state.clients.write().await.insert(client_id, tx);
-        state
-            .clients_protocol
-            .write()
-            .await
-            .insert(client_id, protocol);
+        let client = VangerClient {
+            id: client_id,
+            ip: addr,
+            protocol,
+            tx,
+        };
+        state.clients.write().await.insert(client_id, client);
     }
 
     ::tokio::spawn(async move {
@@ -109,7 +112,6 @@ async fn serve_connection(
     }
 
     state.clients.write().await.remove(&client_id);
-    state.clients_protocol.write().await.remove(&client_id);
     handle_disconnect(&state, client_id).await;
     Ok(())
 }
