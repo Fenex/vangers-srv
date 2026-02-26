@@ -73,13 +73,15 @@ async fn serve_connection(
     let client_id: ClientID = rand::random();
     let (tx, mut rx) = mpsc::channel::<Packet>(1000);
     {
-        let client = VangerClient {
-            id: client_id,
-            ip: addr,
-            protocol,
-            tx,
-        };
-        state.clients.write().await.insert(client_id, client);
+        state.clients.write().await.insert(
+            client_id,
+            VangerClient {
+                id: client_id,
+                ip: addr,
+                protocol,
+                tx,
+            },
+        );
     }
 
     ::tokio::spawn(async move {
