@@ -1,11 +1,10 @@
-use std::cell::RefCell;
-use std::rc::Rc;
+use std::sync::{Arc, RwLock};
 
 use ::tracing::info;
 
 use crate::game::World;
 use crate::protocol::NetTransportReceive;
-use crate::{client::ClientID, vanject::Pos};
+use crate::{client_id::ClientID, vanject::Pos};
 
 use super::Auth;
 use super::Bind;
@@ -31,7 +30,7 @@ pub struct Player {
     /// Storage several info that sending via TCP
     pub body: Option<Body>,
     /// Player is assign to this world
-    pub world: Option<Rc<RefCell<World>>>,
+    pub world: Option<Arc<RwLock<World>>>,
 
     pub pos: Pos<i16>,
 

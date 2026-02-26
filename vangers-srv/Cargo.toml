@@ -17,3 +17,11 @@ thiserror = "1"
 tracing = "0.1.43"
 strum = { version = "0.27.2", features = [ "derive" ] }
 tracing-subscriber = { version = "0.3.22", features = [ "env-filter" ] }
+
+# Tower + transport (migration)
+tower = { version = "0.5", features = ["util", "limit", "buffer", "timeout"] }
+tower-service = "0.3"
+tower-layer = "0.3"
+tokio-util = { version = "0.7", features = ["codec"] }
+bytes = "1"
+futures = "0.3"

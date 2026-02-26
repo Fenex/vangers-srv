@@ -3,17 +3,18 @@ extern crate num_traits;
 use ::clap::Parser;
 use ::tracing_subscriber::EnvFilter;
 
-mod client;
+mod client_id;
+mod codec;
 mod game;
 mod player;
 mod protocol;
 mod server;
-mod shell;
+mod service;
+mod transport;
 mod utils;
 mod vanject;
 
 use crate::server::Server;
-// use crate::shell::*;
 
 #[derive(Parser, Debug, Default)]
 #[clap(name = "Vangers Server", version, author)]
@@ -46,38 +47,14 @@ struct ServerConfig {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     ::tracing_subscriber::fmt()
         .with_env_filter(EnvFilter::from_default_env())
         .init();
 
     let conf: ServerConfig = ServerConfig::parse();
 
-    // let shell = ShellCmd::parse_from(vec!["", "tdest"]);
-
-    // println!("shell is: {:?}", shell);
-
-    // println!("{:?}", s);
-
-    // /* SHELL INPUT COMMANDS */
-    // tokio::spawn(async move {
-    //     loop {
-    //         let mut cmd = String::new();
-    //         std::io::stdin().read_line(&mut cmd);
-    //         let mut iter = cmd.split_ascii_whitespace();
-    //         match iter.next() {
-    //             Some("help") => println!("HELP"),
-    //             _ => println!("undefined command")
-    //         }
-    //     }
-    // });
-
-    // println!("is localhost only: {:?}", opts.localhost);
-
-    let mut srv = Server::new(conf);
-    // if opts.shell {
-    // srv.enable_shell();
-    // }
+    let srv = Server::new(conf);
     srv.start().await?;
 
     Ok(())

@@ -1,10 +1,9 @@
 use std::borrow::Cow;
-use std::cell::RefCell;
 use std::collections::HashMap;
 use std::ffi::CStr;
-use std::rc::Rc;
+use std::sync::{Arc, RwLock};
 
-use crate::client::ClientID;
+use crate::client_id::ClientID;
 use crate::player::{Player, Status as PlayerStatus};
 use crate::protocol::NetTransportReceive;
 use crate::utils::Uptime;
@@ -23,7 +22,7 @@ pub struct Game {
     pub id: GameID,
     pub name: Vec<u8>,
     pub players: Vec<Player>,
-    pub worlds: Vec<Rc<RefCell<World>>>,
+    pub worlds: Vec<Arc<RwLock<World>>>,
     pub birth_time: Uptime,
     pub config: Option<Config>,
     pub vanjects: HashMap<i32, Vanject>,
@@ -181,9 +180,11 @@ impl Game {
     pub fn place_player(&mut self, client_id: ClientID, world: &World) -> bool {
         if let (Some(p), Some(w)) = (
             self.players.iter_mut().find(|p| p.client_id == client_id),
-            self.worlds.iter().find(|w| w.borrow().id == world.id),
+            self.worlds
+                .iter()
+                .find(|w| w.read().unwrap().id == world.id),
         ) {
-            p.world = Some(Rc::clone(w));
+            p.world = Some(Arc::clone(w));
             if p.status != PlayerStatus::GAMING {
                 p.status = PlayerStatus::GAMING;
                 true

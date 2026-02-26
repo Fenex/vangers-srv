@@ -3,7 +3,7 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use crate::{client::ClientID, player::Player};
+use crate::{client_id::ClientID, player::Player};
 
 use crate::game::*;
 
