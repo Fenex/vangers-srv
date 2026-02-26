@@ -69,7 +69,7 @@ impl OnUpdate_RegisterName for Server {
 
 fn extract_auth_data<'a>(data: &'a [u8]) -> Result<(Cow<'a, CStr>, &'a CStr), RegisterNameError> {
     let mut name = Cow::Borrowed(
-        CStr::from_bytes_until_nul(&data).map_err(|_| RegisterNameError::NameOrPasswordParse)?,
+        CStr::from_bytes_until_nul(data).map_err(|_| RegisterNameError::NameOrPasswordParse)?,
     );
 
     if name.is_empty() {
@@ -90,7 +90,7 @@ fn extract_auth_data<'a>(data: &'a [u8]) -> Result<(Cow<'a, CStr>, &'a CStr), Re
     if name.count_bytes() > 16 {
         name = CString::from_vec_with_nul(
             name.to_bytes_with_nul()
-                .into_iter()
+                .iter()
                 .take(15)
                 .chain(&[0])
                 .copied()

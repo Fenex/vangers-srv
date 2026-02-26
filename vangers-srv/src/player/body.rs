@@ -9,7 +9,6 @@ use super::stats::{
 #[allow(dead_code)]
 #[derive(Debug)]
 pub enum Statistics {
-    UNDEFINED,
     VanWar(VanWar),
     Mechosoma(Mechosoma),
     Passembloss(Passembloss),

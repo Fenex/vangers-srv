@@ -11,6 +11,8 @@ use super::Auth;
 use super::Bind;
 use super::Body;
 
+#[allow(non_camel_case_types)]
+#[allow(clippy::upper_case_acronyms)]
 #[derive(PartialEq, Clone, Copy, Debug)]
 pub enum Status {
     INITIAL = 0,

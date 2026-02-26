@@ -20,6 +20,7 @@ const HUNTAGE: ::std::os::raw::c_char = 4;
 const MUSTODONT: ::std::os::raw::c_char = 5;
 
 #[allow(non_camel_case_types)]
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Primitive, Eq, PartialEq, Debug, Copy, Clone)]
 pub enum Type {
     UNCONFIGURED = UNCONFIGURED as isize,

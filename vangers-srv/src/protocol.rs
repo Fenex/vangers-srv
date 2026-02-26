@@ -21,6 +21,7 @@ pub trait NetTransport: NetTransportSend + NetTransportReceive {}
 impl<T> NetTransport for T where T: NetTransportSend + NetTransportReceive {}
 
 #[allow(non_camel_case_types)]
+#[allow(clippy::upper_case_acronyms)]
 #[non_exhaustive]
 #[derive(Copy, Clone, Primitive, Eq, PartialEq, Debug, ::strum::Display)]
 pub enum Action {

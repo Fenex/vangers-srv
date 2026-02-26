@@ -239,7 +239,7 @@ async fn auth(stream: &mut TcpStream) -> Result<u8, AuthError> {
                     .copied()
                     .collect::<Vec<_>>();
 
-                if let Err(_) = stream.write(&send).await {
+                if let Err(_e) = stream.write(&send).await {
                     Err(HsResponse)?
                 }
 

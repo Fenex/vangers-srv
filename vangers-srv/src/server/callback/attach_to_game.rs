@@ -96,9 +96,9 @@ impl OnUpdate_AttachToGame for Server {
 
         let packets = game
             .vanjects
-            .iter()
-            // .filter(|(_, v)| !v.is_non_global())
-            .map(|(_, v)| v.to_vangers_byte())
+            .values()
+            // .filter(|v| !v.is_non_global())
+            .map(|v| v.to_vangers_byte())
             .map(|v| Packet::new(Action::UPDATE_OBJECT, &v[..]))
             .collect::<Vec<_>>();
 

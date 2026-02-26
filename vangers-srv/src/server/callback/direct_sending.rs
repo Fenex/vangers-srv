@@ -92,8 +92,8 @@ impl OnUpdate_DirectSending for Server {
             );
             msg = Cow::Owned({
                 let mut buffer = Vec::with_capacity(LIMIT_MSG_LEN);
-                buffer.write(&msg[0..LIMIT_MSG_LEN - 3 - 1]).ok();
-                buffer.write(b"...").ok();
+                buffer.write_all(&msg[0..LIMIT_MSG_LEN - 3 - 1]).ok();
+                buffer.write_all(b"...").ok();
                 buffer.push(0);
                 buffer
             })

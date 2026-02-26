@@ -1,3 +1,5 @@
+#![allow(clippy::collapsible_else_if)]
+
 use ::tracing::{debug, warn};
 
 use crate::Server;
