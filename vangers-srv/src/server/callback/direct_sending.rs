@@ -3,10 +3,10 @@ use std::io::Write;
 
 use tracing::warn;
 
-use crate::Server;
 use crate::client::ClientID;
 use crate::protocol::Packet;
 use crate::utils;
+use crate::{Server, player::Player};
 
 use super::{OnUpdateError, OnUpdateOk};
 
@@ -16,8 +16,12 @@ pub enum DirectSendingError {
     Parse,
     #[error("cannot parse c-string")]
     String,
-    #[error("player with client_id=`{0}` not bind to connection or not exists")]
-    TxPlayerNotFound(ClientID),
+    #[error("client with client_id=`{0}` is out of all games")]
+    ClientIsOutOfGames(ClientID),
+    #[error("player with client_id=`{0}` is not found in game_id=`{1}`")]
+    PlayerNotFound(ClientID, u32),
+    #[error("player with client_id=`{0}` is not bind in game_id=`{1}`")]
+    PlayerNotBind(ClientID, u32),
 }
 
 #[allow(non_camel_case_types)]
@@ -40,25 +44,37 @@ impl OnUpdate_DirectSending for Server {
             return Err(DirectSendingError::Parse.into());
         }
 
+        let game = self
+            .get_game_by_clientid(client_id)
+            .ok_or(DirectSendingError::ClientIsOutOfGames(client_id))?;
+
         let mask = utils::slice_le_to_u32(&packet.data[0..4]);
 
         // storages binded player_id by client_id
-        let mut player_id: Option<u8> = None;
+        let mut player: Option<&Player> = None;
         // storages all client_ids for sending to
         let mut client_ids = vec![];
-        if let Some(game) = self.get_game_by_clientid(client_id) {
-            for p in &game.players {
-                if let Some(bind) = p.bind {
-                    if p.client_id == client_id {
-                        // we find transmitter client
-                        player_id = Some(bind.id());
-                    } else if bind.mask() as u32 & mask != 0 {
-                        // we find valid reciever client
-                        client_ids.push(p.client_id)
-                    }
+
+        for p in &game.players {
+            if let Some(bind) = p.bind {
+                if p.client_id == client_id {
+                    // we find transmitter client
+                    player = Some(p);
+                } else if bind.mask() as u32 & mask != 0 {
+                    // we find valid reciever client
+                    client_ids.push(p.client_id)
                 }
             }
         }
+
+        let player = player.ok_or(DirectSendingError::PlayerNotFound(client_id, game.id))?;
+        if player.bind.is_none() || player.auth.is_none() {
+            Err(DirectSendingError::PlayerNotBind(client_id, game.id))?
+        }
+        let player_id = player
+            .bind
+            .expect("we check for none a few rows above")
+            .id();
 
         let Some(msg) = utils::get_first_cstr(&packet.data[4..]) else {
             Err(DirectSendingError::String)?
@@ -83,10 +99,6 @@ impl OnUpdate_DirectSending for Server {
             })
         }
 
-        let player_id = match player_id {
-            Some(p_id) => p_id,
-            None => return Err(DirectSendingError::TxPlayerNotFound(client_id).into()),
-        };
         let data = std::iter::empty()
             .chain(&[player_id])
             .chain(&msg[..])
