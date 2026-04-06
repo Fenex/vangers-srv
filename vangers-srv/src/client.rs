@@ -229,8 +229,8 @@ async fn auth(stream: &mut TcpStream) -> Result<u8, AuthError> {
 
                 let protocol_version = buff[pos + 1];
 
-                if !matches!(protocol_version, 1 | 2) {
-                    Err(HsUnexpectedProtocolVersion(&[1, 2], protocol_version))?
+                if protocol_version != 3 {
+                    Err(HsUnexpectedProtocolVersion(&[3], protocol_version))?
                 }
 
                 let send = HS_OUT
