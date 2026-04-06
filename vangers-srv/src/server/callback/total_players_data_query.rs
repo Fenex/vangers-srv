@@ -33,7 +33,7 @@ impl OnUpdate_TotalPlayersDataQuery for Server {
             None => return Err(TotalPlayersDataQueryError::PlayerNotFound(client_id).into()),
         };
 
-        let mut data = vec![game.players.len() as u8];
+        let mut data = vec![(game.players.len() + game.removed_players.len()) as u8];
         let mut players_count = 0;
         for player in &game.players {
             let id = match player.bind {
@@ -79,11 +79,71 @@ impl OnUpdate_TotalPlayersDataQuery for Server {
             players_count += 1;
         }
 
+        for player in &game.removed_players {
+            let mut p_data = std::iter::empty()
+                .chain(&[player.bind_id])
+                .chain(&[player.status as u8])
+                .chain(&[player.world])
+                .chain(&player.pos.to_vangers_byte())
+                .chain(&player.name)
+                .chain(&player.body)
+                .copied()
+                .collect::<Vec<_>>();
+
+            data.append(&mut p_data);
+            players_count += 1;
+        }
+
         data[0] = players_count;
 
         packet
             .create_answer(data)
             .map(OnUpdateOk::Response)
             .ok_or(OnUpdateError::ResponsePacketTypeNotExist(packet.action))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::game::{Game, RemovedPlayer};
+    use crate::player::{Body, Player, Status};
+    use crate::protocol::Action;
+    use crate::vanject::Pos;
+
+    #[test]
+    fn includes_removed_players_in_full_snapshot() {
+        let mut srv = Server::new(Default::default());
+        let mut game = Game::new(1);
+
+        let client_id: ClientID = 11;
+        let mut live_player = Player::new(client_id);
+        live_player.set_auth(b"live\0", b"\0");
+        live_player.body = Some(Body::default());
+        game.attach_player(live_player);
+
+        game.removed_players.push(RemovedPlayer {
+            bind_id: 2,
+            status: Status::FINISHED,
+            world: 0,
+            pos: Pos { x: 10, y: 20 },
+            name: b"gone\0".to_vec(),
+            body: Body::default().to_vangers_byte(),
+        });
+
+        srv.games.insert(1, game);
+
+        let response = srv
+            .total_players_data_query(&Packet::new(Action::TOTAL_PLAYERS_DATA_QUERY, &[]), client_id)
+            .unwrap();
+
+        match response {
+            OnUpdateOk::Response(packet) => {
+                assert_eq!(packet.action, Action::TOTAL_LIST_OF_PLAYERS_DATA);
+                assert_eq!(packet.data[0], 2);
+                assert!(packet.data.windows(b"gone\0".len()).any(|w| w == b"gone\0"));
+            }
+            other => panic!("unexpected response: {other:?}"),
+        }
     }
 }

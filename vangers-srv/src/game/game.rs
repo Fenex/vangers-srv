@@ -6,7 +6,8 @@ use std::rc::Rc;
 
 use crate::client::ClientID;
 use crate::player::{Player, Status as PlayerStatus};
-use crate::protocol::NetTransportReceive;
+use crate::protocol::{NetTransportReceive, NetTransportSend};
+use crate::vanject::Pos;
 use crate::utils::Uptime;
 use crate::vanject::Vanject;
 
@@ -23,6 +24,7 @@ pub struct Game {
     pub id: GameID,
     pub name: Vec<u8>,
     pub players: Vec<Player>,
+    pub removed_players: Vec<RemovedPlayer>,
     pub worlds: Vec<Rc<RefCell<World>>>,
     pub birth_time: Uptime,
     pub config: Option<Config>,
@@ -44,6 +46,7 @@ impl std::fmt::Debug for Game {
             .field("name", &name)
             .field("birth_time", &self.birth_time)
             .field("players", &self.players)
+            .field("removed_players", &self.removed_players)
             .field("worlds", &self.worlds)
             .field("config", &self.config)
             .field("vanjects_count", &self.vanjects.len())
@@ -61,6 +64,7 @@ impl Game {
             id,
             name: vec![],
             players: vec![],
+            removed_players: vec![],
             worlds: vec![],
             birth_time: Uptime::new(),
             config: None, // used_players_ids: 0,
@@ -200,6 +204,7 @@ impl Game {
     pub fn attach_player(&mut self, mut p: Player) -> Option<u8> {
         match self.get_uniq_player_id() {
             Some(uniq_id) if uniq_id > 0 => {
+                self.removed_players.retain(|player| player.bind_id != uniq_id);
                 p.set_bind(uniq_id);
                 self.players.push(p);
                 Some(uniq_id)
@@ -226,5 +231,37 @@ impl Game {
             Some(ref a) => a.get_gametype(),
             _ => Type::UNCONFIGURED,
         }
+    }
+}
+
+#[derive(Debug)]
+pub struct RemovedPlayer {
+    pub bind_id: u8,
+    pub status: PlayerStatus,
+    pub world: u8,
+    pub pos: Pos<i16>,
+    pub name: Vec<u8>,
+    pub body: Vec<u8>,
+}
+
+impl RemovedPlayer {
+    pub fn from_player(player: &Player) -> Option<Self> {
+        let bind_id = player.bind.map(|bind| bind.id())?;
+        let name = player.auth.as_ref()?.name().to_vec();
+        let body = player.body.as_ref()?.to_vangers_byte();
+        let world = player
+            .world
+            .as_ref()
+            .map(|world| world.borrow().id)
+            .unwrap_or(0);
+
+        Some(Self {
+            bind_id,
+            status: player.status,
+            world,
+            pos: player.pos,
+            name,
+            body,
+        })
     }
 }

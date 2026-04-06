@@ -41,22 +41,32 @@ impl OnUpdate_CloseSocket for Server {
             None => return Err(CloseSocketError::PlayerNotFound(client_id).into()),
         };
 
-        let player = game.get_mut_player(client_id).unwrap();
-        let player_bind_id = match player.bind {
-            Some(bind) => bind.id(),
-            None => return Err(CloseSocketError::PlayerNotBind(client_id).into()),
-        };
+        let mut finished_packet = None;
+        {
+            let player = game.get_mut_player(client_id).unwrap();
+            let player_bind_id = match player.bind {
+                Some(bind) => bind.id(),
+                None => return Err(CloseSocketError::PlayerNotBind(client_id).into()),
+            };
 
-        player.world = None;
-        if player.status == PlayerStatus::GAMING {
-            player.status = PlayerStatus::FINISHED;
-            self.notify_game(
-                client_id,
-                &Packet::new(
+            player.world = None;
+            if player.status == PlayerStatus::GAMING {
+                player.status = PlayerStatus::FINISHED;
+                finished_packet = Some(Packet::new(
                     Action::PLAYERS_STATUS,
                     &[player_bind_id, PlayerStatus::FINISHED as u8],
-                ),
-            );
+                ));
+            }
+
+            if let Some(snapshot) = crate::game::RemovedPlayer::from_player(player) {
+                game.removed_players
+                    .retain(|removed| removed.bind_id != snapshot.bind_id);
+                game.removed_players.push(snapshot);
+            }
+        }
+
+        if let Some(packet) = finished_packet {
+            self.notify_game(client_id, &packet);
         }
 
         let game = self.get_mut_game_by_clientid(client_id).unwrap();
