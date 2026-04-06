@@ -57,7 +57,7 @@ impl OnUpdate_LeaveWorld for Server {
         let delete = game
             .vanjects
             .iter()
-            .filter(|(_, v)| v.get_station() == player_bind_id as i32 && v.is_private())
+            .filter(|(_, v)| v.get_station() == player_bind_id as i32 && v.is_non_global())
             .map(|(&id, v)| {
                 (
                     id,
@@ -87,5 +87,47 @@ impl OnUpdate_LeaveWorld for Server {
         );
 
         Ok(OnUpdateOk::Complete)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::game::{Game, World};
+    use crate::player::Player;
+    use crate::vanject::Vanject;
+    use std::cell::RefCell;
+    use std::rc::Rc;
+
+    #[test]
+    fn leave_world_removes_player_owned_non_private_objects_too() {
+        let mut srv = Server::new(Default::default());
+        let mut game = Game::new(1);
+        let client_id: ClientID = 11;
+        game.attach_player(Player::new(client_id));
+
+        let world = Rc::new(RefCell::new(World::new(1, 100)));
+        game.worlds.push(Rc::clone(&world));
+        game.place_player(client_id, &world.borrow());
+
+        let mut slot = Vanject::create_from_slice(&[
+            1, 0, 2, 4, // player-owned SLOT object, non-private but non-global
+            6, 0, 0, 0, // time
+            10, 0, // x
+            20, 0, // y
+            15, 0, // radius
+            1, 2, 3,
+        ])
+        .unwrap();
+        slot.player_bind_id = 1;
+        let slot_id = slot.id;
+        game.vanjects.insert(slot_id, slot);
+
+        srv.games.insert(1, game);
+        srv.leave_world(&Packet::new(Action::LEAVE_WORLD, &[]), client_id)
+            .unwrap();
+
+        let game = srv.games.get(&1).unwrap();
+        assert!(!game.vanjects.contains_key(&slot_id));
     }
 }
