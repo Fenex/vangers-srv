@@ -45,8 +45,23 @@ impl OnUpdate_CreateObject for Server {
             None => return Err(CreateObjectError::PlayerNotFound(client_id).into()),
         };
 
-        if game.vanjects.contains_key(&vanject.id) {
+        if let Some(existing) = game.vanjects.get(&vanject.id) {
             debug!("VANJECT with id=`{}` already exists", vanject.id);
+
+            let mut packets = vec![Packet::new(Action::UPDATE_OBJECT, &existing.to_vangers_byte())];
+            if existing.get_type() == NID::VANGER {
+                let data = std::iter::empty()
+                    .chain(&[existing.player_bind_id])
+                    .chain(&existing.pos.to_vangers_byte())
+                    .copied()
+                    .collect::<Vec<_>>();
+                packets.push(Packet::new(Action::PLAYERS_POSITION, &data));
+            }
+
+            let _ = game;
+            packets
+                .iter()
+                .for_each(|packet| self.notify_player(client_id, packet));
         } else {
             let player = game.get_mut_player(client_id).unwrap();
             if vanject.bind_to_player(player).is_err() {
