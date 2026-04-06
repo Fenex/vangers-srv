@@ -82,8 +82,7 @@ impl OnUpdate_SetWorld for Server {
             .filter(|(_, v)| {
                 v.get_type() != NID::VANGER
                     && v.get_world() == world_id as i32
-                    // && v.get_station() != player_bind_id as i32 // it is REAL not need con
-                    && (!v.is_players() || v.is_players() && v.is_non_global())
+                    && !v.is_players()
             })
             .map(|(_, v)| Packet::new(Action::UPDATE_OBJECT, &v.to_vangers_byte()))
             .collect::<Vec<_>>();
