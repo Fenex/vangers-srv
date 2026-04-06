@@ -200,11 +200,11 @@ impl Vanject {
         let radius = slice_le_to_i16(&slice[12..14]);
 
         let body = if get_vanject_type(id) == NID::VANGER {
-            if slice.len() < 15 {
+            if slice.len() < 16 {
                 return Err(VanjectError::SliceTooSmall);
             }
-            // let y_half_size_of_screen = slice[14] << 1;
-            &slice[15..]
+            // let y_half_size_of_screen = slice_le_to_i16(&slice[14..16]);
+            &slice[16..]
         } else {
             &slice[14..]
         };
@@ -233,11 +233,11 @@ impl Vanject {
         let pos = Pos::from_slice(&slice[8..12]).unwrap();
 
         let body = if get_vanject_type(id) == NID::VANGER {
-            if slice.len() < 13 {
+            if slice.len() < 14 {
                 return Err(VanjectError::SliceTooSmall);
             }
-            // let y_half_size_of_screen = slice[14] << 1;
-            &slice[13..]
+            // let y_half_size_of_screen = slice_le_to_i16(&slice[12..14]);
+            &slice[14..]
         } else {
             &slice[12..]
         };
@@ -416,7 +416,7 @@ mod test {
                 .chain(&[10, 0]) // pos.x = 10
                 .chain(&[20, 0]) // pos.y = 20
                 .chain(&[15, 0]) // radius = 15
-                .chain(&[8u8]) // y_half_size_of_screen (inside NID::VANGER vajects only)
+                .chain(&8u16.to_le_bytes()) // y_half_size_of_screen (inside NID::VANGER vajects only)
                 .chain(&[1u8, 2, 3, 4, 5, 6])
                 .map(|&b| b)
                 .collect::<Vec<_>>();
@@ -455,7 +455,7 @@ mod test {
 
         #[test]
         #[allow(non_snake_case)]
-        fn small_length__not_NID_VANGER() {
+        fn small_length__NID_VANGER() {
             assert!(Vanject::create_from_slice(&[]).is_err());
             assert!(Vanject::create_from_slice(&[1]).is_err());
             assert!(Vanject::create_from_slice(&[1, 0, 9, 4]).is_err());
@@ -463,7 +463,7 @@ mod test {
                 Vanject::create_from_slice(&[1, 0, 9, 4, 6, 0, 0, 0, 10, 0, 20, 0, 15, 0]).is_err()
             );
             assert!(
-                Vanject::create_from_slice(&[1, 0, 9, 4, 6, 0, 0, 0, 10, 0, 20, 0, 15, 0, 111])
+                Vanject::create_from_slice(&[1, 0, 9, 4, 6, 0, 0, 0, 10, 0, 20, 0, 15, 0, 8, 0])
                     .is_ok()
             );
         }
@@ -515,7 +515,7 @@ mod test {
 
         #[test]
         #[allow(non_snake_case)]
-        fn small_length__NID_VANGER() {
+        fn small_length__not_NID_VANGER() {
             assert!(Vanject::create_from_slice(&[]).is_err());
             assert!(Vanject::create_from_slice(&[1]).is_err());
             assert!(Vanject::create_from_slice(&[1, 1, 1, 1]).is_err());
@@ -543,7 +543,7 @@ mod test {
                 .chain(&[20, 0]) // pos.y = 20
                 .chain(&[15, 0]) // radius = 15
                 .chain(if is_nid_vanger {
-                    &[8u8, 1u8, 2, 3, 4, 5, 6][..]
+                    &[8u8, 0u8, 1u8, 2, 3, 4, 5, 6][..]
                 } else {
                     &[1u8, 2, 3, 4, 5, 6][..]
                 })
@@ -564,7 +564,7 @@ mod test {
                 .chain(&[7, 0, 0, 0]) // time = 7
                 .chain(&[11, 0]) // pos.x = 11
                 .chain(&[21, 0]) // pos.y = 21
-                .chain(&[8u8]) // y_half_size_of_screen (only inside NID::VANGER vajects)
+                .chain(&8u16.to_le_bytes()) // y_half_size_of_screen (only inside NID::VANGER vajects)
                 .chain(&[88]) // body = [88]
                 .map(|&b| b)
                 .collect::<Vec<_>>();
@@ -614,7 +614,7 @@ mod test {
             check(&v);
 
             assert!(
-                v.update_from_slice(&[2, 0, 9, 4, 7, 0, 0, 0, 11, 0, 21, 0, 8u8])
+                v.update_from_slice(&[2, 0, 9, 4, 7, 0, 0, 0, 11, 0, 21, 0, 8u8, 0u8])
                     .is_ok()
             );
             assert_eq!(7, v.time);
@@ -623,7 +623,7 @@ mod test {
             assert_eq!(&[0u8][1..], &v.body[..]);
 
             assert!(
-                v.update_from_slice(&[2, 0, 9, 4, 9, 0, 0, 0, 12, 0, 22, 0, 8u8, 110, 111])
+                v.update_from_slice(&[2, 0, 9, 4, 9, 0, 0, 0, 12, 0, 22, 0, 8u8, 0u8, 110, 111])
                     .is_ok()
             );
             assert_eq!(9, v.time);
