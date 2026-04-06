@@ -1,6 +1,6 @@
 use crate::Server;
-use crate::protocol::{Action, NetTransportSend, Packet};
-use crate::vanject::{NID, VanjectError};
+use crate::protocol::{Action, Packet};
+use crate::vanject::VanjectError;
 use crate::{client::ClientID, utils::slice_le_to_i32};
 
 use super::{OnUpdateError, OnUpdateOk};
@@ -52,8 +52,6 @@ impl OnUpdate_UpdateObject for Server {
             .map(|bind| bind.id())
             .ok_or(UpdateObjectError::PlayerNotBind(client_id))?;
 
-        let mut packets: Vec<Packet> = vec![];
-
         match game.vanjects.get_mut(&vanject_id) {
             Some(vanject) => {
                 vanject
@@ -61,25 +59,10 @@ impl OnUpdate_UpdateObject for Server {
                     .map_err(UpdateObjectError::SliceToVanjectParse)?;
 
                 vanject.player_bind_id = player_bind_id;
-                if vanject.get_type() == NID::VANGER {
-                    let data = std::iter::empty()
-                        .chain(&[vanject.player_bind_id])
-                        .chain(&vanject.pos.to_vangers_byte())
-                        .copied()
-                        .collect::<Vec<_>>();
-                    packets.push(Packet::new(Action::PLAYERS_POSITION, &data));
-                }
-
-                packets.push(Packet::new(
-                    Action::UPDATE_OBJECT,
-                    &vanject.to_vangers_byte(),
-                ));
+                let packet = Packet::new(Action::UPDATE_OBJECT, &vanject.to_vangers_byte());
+                self.notify_game(client_id, &packet);
             }
             None => Err(UpdateObjectError::VanjectNotFound(vanject_id))?,
-        }
-
-        for p in packets {
-            self.notify_game(client_id, &p);
         }
 
         Ok(OnUpdateOk::Complete)
