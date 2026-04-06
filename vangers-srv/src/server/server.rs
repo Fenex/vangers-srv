@@ -155,6 +155,32 @@ impl Server {
         self.notify(client_id, packet, Box::new(|_| true));
     }
 
+    /// Sends `packet` to players that are currently attached to the same world.
+    pub fn notify_world(
+        &self,
+        client_id: ClientID,
+        world_id: u8,
+        packet: &Packet,
+        include_sender: bool,
+    ) {
+        let game = match self.get_game_by_clientid(client_id) {
+            Some(game) => game,
+            None => {
+                error!(
+                    "cannot doing notify_world: player with client_id=`{}` not found on the server",
+                    client_id
+                );
+                return;
+            }
+        };
+
+        let client_ids = client_ids_in_world(game, world_id, Some(client_id), include_sender);
+        self.clients
+            .iter()
+            .filter(|c| client_ids.contains(&c.id))
+            .for_each(|c| c.send(packet));
+    }
+
     pub async fn start(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         let (client_tx, mut clients_rx) = mpsc::channel(50);
         let (event_tx, mut event_rx) = mpsc::channel::<Event>(10);
@@ -231,5 +257,54 @@ impl Server {
 
             }
         }
+    }
+}
+
+fn client_ids_in_world(
+    game: &Game,
+    world_id: u8,
+    sender_id: Option<ClientID>,
+    include_sender: bool,
+) -> Vec<ClientID> {
+    game.players
+        .iter()
+        .filter(|player| {
+            player
+                .world
+                .as_ref()
+                .map(|world| world.borrow().id == world_id)
+                .unwrap_or(false)
+        })
+        .filter(|player| include_sender || Some(player.client_id) != sender_id)
+        .map(|player| player.client_id)
+        .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::client_ids_in_world;
+    use crate::game::{Game, World};
+    use crate::player::Player;
+    use std::cell::RefCell;
+    use std::rc::Rc;
+
+    #[test]
+    fn selects_only_players_from_requested_world() {
+        let mut game = Game::new(1);
+        game.attach_player(Player::new(11));
+        game.attach_player(Player::new(22));
+
+        let world1 = Rc::new(RefCell::new(World::new(1, 100)));
+        let world2 = Rc::new(RefCell::new(World::new(2, 100)));
+        game.worlds.push(Rc::clone(&world1));
+        game.worlds.push(Rc::clone(&world2));
+        game.place_player(11, &world1.borrow());
+        game.place_player(22, &world2.borrow());
+
+        let ids = client_ids_in_world(&game, 1, Some(11), false);
+        assert!(ids.is_empty());
+
+        let ids = client_ids_in_world(&game, 1, Some(11), true);
+        assert_eq!(ids, vec![11]);
     }
 }

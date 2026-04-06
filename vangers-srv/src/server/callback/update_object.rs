@@ -78,8 +78,18 @@ impl OnUpdate_UpdateObject for Server {
             None => Err(UpdateObjectError::VanjectNotFound(vanject_id))?,
         }
 
+        let world_id = if vanject_id != 0 {
+            crate::vanject::get_world(vanject_id) as u8
+        } else {
+            0
+        };
+
         for p in packets {
-            self.notify_game(client_id, &p);
+            if crate::vanject::is_non_global_vanject(vanject_id) {
+                self.notify_world(client_id, world_id, &p, false);
+            } else {
+                self.notify_game(client_id, &p);
+            }
         }
 
         Ok(OnUpdateOk::Complete)
