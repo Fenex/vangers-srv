@@ -4,7 +4,7 @@ use ::tracing::{debug, warn};
 
 use crate::Server;
 use crate::client::ClientID;
-use crate::protocol::{Action, NetTransportSend, Packet};
+use crate::protocol::{Action, Packet};
 use crate::vanject::*;
 
 use super::{OnUpdateError, OnUpdateOk};
@@ -61,16 +61,7 @@ impl OnUpdate_CreateObject for Server {
                 } else {
                     let data = vanject.to_vangers_byte();
                     let answer = Packet::new(Action::UPDATE_OBJECT, &data);
-
-                    let data = std::iter::empty()
-                        .chain(&[vanject.player_bind_id])
-                        .chain(&vanject.pos.to_vangers_byte())
-                        .copied()
-                        .collect::<Vec<_>>();
-                    let player_position = Packet::new(Action::PLAYERS_POSITION, &data);
-
                     self.notify_game(client_id, &answer);
-                    self.notify_game(client_id, &player_position);
                 }
             } else {
                 // #IF: vanject.get_type() != NID::VANGER
