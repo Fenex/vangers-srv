@@ -9,7 +9,7 @@ use crate::protocol::{Action, Packet};
 use crate::utils::slice_le_to_i16;
 use crate::vanject::NID;
 
-use super::{OnUpdateError, OnUpdateOk};
+use super::{OnUpdate_LeaveWorld, OnUpdateError, OnUpdateOk};
 
 #[derive(Debug, ::thiserror::Error)]
 pub enum SetWorldError {
@@ -41,6 +41,17 @@ impl OnUpdate_SetWorld for Server {
     ) -> Result<OnUpdateOk, OnUpdateError> {
         let world_id = packet.data[0];
         let world_y_size = slice_le_to_i16(&packet.data[1..3]);
+
+        let needs_leave_world = self
+            .get_game_by_clientid(client_id)
+            .and_then(|game| game.get_player(client_id))
+            .and_then(|player| player.world.as_ref())
+            .map(|world| world.borrow().id != world_id)
+            .unwrap_or(false);
+
+        if needs_leave_world {
+            self.leave_world(&Packet::new(Action::LEAVE_WORLD, &[]), client_id)?;
+        }
 
         let game = self
             .get_mut_game_by_clientid(client_id)
@@ -107,5 +118,48 @@ impl OnUpdate_SetWorld for Server {
             .for_each(|p| self.notify_player(client_id, p));
 
         Ok(OnUpdateOk::Complete)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::game::{Game, World};
+    use crate::player::Player;
+    use crate::vanject::Vanject;
+
+    #[test]
+    fn set_world_cleans_old_world_when_player_was_already_bound() {
+        let mut srv = Server::new(Default::default());
+        let mut game = Game::new(1);
+        let client_id: ClientID = 11;
+        game.attach_player(Player::new(client_id));
+
+        let world1 = Rc::new(RefCell::new(World::new(1, 100)));
+        game.worlds.push(Rc::clone(&world1));
+        game.place_player(client_id, &world1.borrow());
+
+        let mut vanger = Vanject::create_from_slice(&[
+            1, 0, 9, 4, // id
+            6, 0, 0, 0, // time
+            10, 0, // x
+            20, 0, // y
+            15, 0, // radius
+            7, 8,
+        ])
+        .unwrap();
+        vanger.player_bind_id = 1;
+        let vanger_id = vanger.id;
+        game.vanjects.insert(vanger_id, vanger);
+
+        srv.games.insert(1, game);
+
+        let packet = Packet::new(Action::SET_WORLD, &[2, 100, 0]);
+        srv.set_world(&packet, client_id).unwrap();
+
+        let game = srv.games.get(&1).unwrap();
+        let player = game.get_player(client_id).unwrap();
+        assert_eq!(player.world.as_ref().unwrap().borrow().id, 2);
+        assert!(!game.vanjects.contains_key(&vanger_id));
     }
 }
