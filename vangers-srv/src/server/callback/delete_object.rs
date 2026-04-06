@@ -76,7 +76,16 @@ impl OnUpdate_DeleteObject for Server {
             debug!("VANJECT with id=`{}` not found", vanject_id);
         }
 
-        self.notify_game(client_id, &answer);
+        if crate::vanject::is_non_global_vanject(vanject_id) {
+            self.notify_world(
+                client_id,
+                crate::vanject::get_world(vanject_id) as u8,
+                &answer,
+                false,
+            );
+        } else {
+            self.notify_game(client_id, &answer);
+        }
         Ok(OnUpdateOk::Complete)
     }
 }

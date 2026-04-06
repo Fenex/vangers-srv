@@ -45,7 +45,7 @@ impl OnUpdate_LeaveWorld for Server {
             None => return Err(LeaveWorldError::PlayerNotBind(client_id).into()),
         };
 
-        let _world_id = match player.world {
+        let world_id = match player.world {
             Some(ref world) => match world.try_borrow() {
                 Ok(w) => w.id,
                 Err(e) => return Err(LeaveWorldError::BorrowWorld(client_id, e).into()),
@@ -74,10 +74,21 @@ impl OnUpdate_LeaveWorld for Server {
             })
             .collect::<HashMap<_, _>>();
 
+        let hide = game
+            .vanjects
+            .iter()
+            .filter(|(_, v)| v.is_non_global() && v.get_world() == world_id as i32)
+            .map(|(&id, _)| Packet::new(Action::HIDE_OBJECT, &id.to_le_bytes()))
+            .collect::<Vec<_>>();
+
         game.vanjects.retain(|id, _| !delete.contains_key(id));
 
         for (_, packet) in delete {
             self.notify_game(client_id, &packet);
+        }
+
+        for packet in hide {
+            self.notify_player(client_id, &packet);
         }
 
         // That sends by github server, but it seems to may be safety removed at all
